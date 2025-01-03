@@ -7,6 +7,7 @@ import TextEditor from "./pages/TextEditor";
 import Chatbot from "./pages/Chatbot";
 import ChatHistory from "./pages/ChatHistory";
 import Header from "./components/Header";
+
 import Footer from "./components/Footer"; // Add this if you plan to include a footer
 import PrivateRoute from "./components/PrivateRoute";
 import FloatingChatbot from "./components/Chatbot";
@@ -15,7 +16,7 @@ export default function App() {
     <BrowserRouter>
       {/* Shared Components */}
       <Header />
-
+     
 
       {/* Application Routes */}
       <Routes>
