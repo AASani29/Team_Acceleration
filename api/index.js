@@ -5,6 +5,7 @@ import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import pdfRoutes from './routes/pdf.route.js';
 
 
 
@@ -42,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'client', 'dist')));
 // API routes
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
-
+app.use("/api/pdf", pdfRoutes);
 
 // Catch-all route for serving the client
 app.get('*', (req, res) => {
@@ -67,3 +68,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+
+
