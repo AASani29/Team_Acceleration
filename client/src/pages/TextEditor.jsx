@@ -155,46 +155,48 @@ const TextEditor = () => {
   };
 
   const handlePost = async () => {
-    setLoading(true);
-    try {
-      const aiResponse = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.7,
-        max_tokens: 200,
-        messages: [
-          {
-            role: "system",
-            content: `You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.`,
-          },
-          {
-            role: "user",
-            content: `Generate a title and caption for this content: ${banglishText}`,
-          },
-        ],
-      });
+  setLoading(true);
+  try {
+    const aiResponse = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 200,
+      messages: [
+        {
+          role: "system",
+          content: `You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.`,
+        },
+        {
+          role: "user",
+          content: `Generate a title and caption for this content: ${banglishText}`,
+        },
+      ],
+    });
 
-      const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
-      const [title, caption] = aiResponseContent.split("\n");
+    const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
+    const [title, caption] = aiResponseContent.split("\n");
 
-      setPostTitle(title);
-      setPostCaption(caption);
+    setPostTitle(title);
+    setPostCaption(caption);
 
-      // Now, generate the PDF with the Title and Caption
-      const pdf = new jsPDF();
-      pdf.setFontSize(20);
-      pdf.text(title, 10, 30);
-      pdf.setFontSize(12);
-      pdf.text(caption, 10, 40);
-      pdf.save('post_with_title_and_caption.pdf');
+    // Create the PDF and set the title as the file name
+    const pdf = new jsPDF();
+    pdf.setFontSize(20);
+    pdf.text(title, 10, 30);
+    pdf.setFontSize(12);
+    pdf.text(caption, 10, 50); // Adjusted vertical position for better layout
+    const fileName = `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`;
+    pdf.save(fileName);
 
-      alert(`Post generated! Title: ${title}, Caption: ${caption}`);
-    } catch (error) {
-      console.error("Error generating post:", error);
-      alert("Failed to generate post!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    alert(`Post generated! Title: ${title}, Caption: ${caption}`);
+  } catch (error) {
+    console.error("Error generating post:", error);
+    alert("Failed to generate post!");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -223,12 +225,7 @@ const TextEditor = () => {
         >
           Voice Input
         </button>
-        <button
-          onClick={handlePost}
-          className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-        >
-          Post
-        </button>
+        
       </div>
 
       <div className="mb-4">
@@ -243,7 +240,7 @@ const TextEditor = () => {
 
       <div className="flex justify-between mb-6">
         <button
-          onClick={handleDownloadPDF}
+          onClick={handlePost}
           className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400"
         >
           Download PDF
@@ -283,13 +280,8 @@ const TextEditor = () => {
         </div>
       </div>
 
-      {/* Post Title and Caption */}
-      {postTitle && (
-        <div className="mt-6 p-4 bg-white border rounded-md shadow-sm">
-          <h3 className="font-bold text-lg">Post Title: {postTitle}</h3>
-          <p>{postCaption}</p>
-        </div>
-      )}
+      
+      
     </div>
   );
 };
