@@ -1,7 +1,7 @@
 // routes/pdf.route.js
 import express from "express";
 import multer from "multer";
-import { uploadPDF } from "../controllers/pdf.controller.js";
+import { getUserPDFs, uploadPDF } from "../controllers/pdf.controller.js";
 import { verifyToken } from "../utils/verifyUser.js"; // Add verifyToken here
 
 // Create a new router instance
@@ -21,5 +21,6 @@ const upload = multer({ storage });
 
 // Route to handle file upload
 router.post("/upload", verifyToken, upload.single("pdf"), uploadPDF);  // Apply verifyToken middleware here
+router.get("/user-pdfs", verifyToken, getUserPDFs); // Protected route for logged-in user
 
 export default router;

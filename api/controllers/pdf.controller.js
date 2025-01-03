@@ -52,3 +52,21 @@ export const uploadPDF = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
+// Controller to fetch PDFs for the logged-in user (only title, caption, and filePath)
+export const getUserPDFs = async (req, res) => {
+  try {
+    // Fetch PDFs with only the selected fields (title, caption, filePath) where userId matches the logged-in user's ID
+    const userPDFs = await PDF.find({ userId: req.user.id }).select('title caption filePath');
+
+    if (userPDFs.length === 0) {
+      return res.status(404).json({ message: "No PDFs found for this user." });
+    }
+
+    // Return the PDFs with the required fields
+    res.status(200).json(userPDFs); // Send only title, caption, and filePath as a response
+  } catch (error) {
+    console.error("Error fetching PDFs:", error.message);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};

@@ -1,11 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from "firebase/storage";
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import {
   updateUserStart,
@@ -31,7 +26,35 @@ export default function Profile() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [userPDFs, setUserPDFs] = useState([]); // State to store PDFs
   const { currentUser, loading, error } = useSelector((state) => state.user);
+
+  // Fetch PDFs when the profile page loads
+  useEffect(() => {
+    const fetchUserPDFs = async () => {
+      try {
+        const response = await fetch("/api/pdf/user-pdfs", {
+          method: "GET",
+          credentials: "include", // Ensure cookies (JWT token) are sent
+        });
+
+        if (response.ok) {
+          const pdfs = await response.json();
+          setUserPDFs(pdfs); // Set the PDFs to state
+        } else {
+          const errorData = await response.json();
+          alert(errorData.message);
+        }
+      } catch (error) {
+        console.error("Error fetching PDFs:", error);
+        alert("Failed to fetch PDFs!");
+      }
+    };
+
+    if (currentUser) {
+      fetchUserPDFs(); // Fetch PDFs for the logged-in user
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (image) {
@@ -202,6 +225,25 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* Display PDFs */}
+      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Your PDFs</h2>
+        <ul className="space-y-3">
+          {userPDFs.length > 0 ? (
+            userPDFs.map((pdf) => (
+              <li key={pdf._id} className="bg-gray-100 p-3 rounded-lg shadow-md">
+                <a href={pdf.filePath} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                  {pdf.title}
+                </a>
+                <p className="text-gray-600">{pdf.caption}</p>
+              </li>
+            ))
+          ) : (
+            <p className="text-gray-500">No PDFs found.</p>
+          )}
+        </ul>
+      </div>
+
       {/* Dynamic Form Section */}
       <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Profile</h2>
@@ -233,12 +275,8 @@ export default function Profile() {
             {loading ? "Updating..." : "Update Profile"}
           </button>
         </form>
-        <p className="text-green-500 mt-4 text-center">
-          {successMessage}
-        </p>
-        <p className="text-red-500 mt-4 text-center">
-          {errorMessage}
-        </p>
+        <p className="text-green-500 mt-4 text-center">{successMessage}</p>
+        <p className="text-red-500 mt-4 text-center">{errorMessage}</p>
       </div>
     </div>
   );
