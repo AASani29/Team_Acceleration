@@ -109,10 +109,10 @@ export default function Header() {
             </li>
             <li>
               <Link
-                to="/admin/dashboard"
+                to="/dashboard"
                 className="text-gray-300 hover:text-green-400 transition duration-300"
               >
-                Admin
+                Dashboard
               </Link>
             </li>
           </ul>

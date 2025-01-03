@@ -5,12 +5,12 @@ import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import TextEditor from "./pages/TextEditor";
 import Chatbot from "./pages/Chatbot";
-import ChatHistory from "./pages/ChatHistory";
 import Header from "./components/Header";
-
-import Footer from "./components/Footer"; // Add this if you plan to include a footer
+import Footer from "./components/Footer"; 
 import PrivateRoute from "./components/PrivateRoute";
 import FloatingChatbot from "./components/Chatbot";
+import Dashboard from "./pages/Dashboard";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -30,7 +30,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/editor" element={<TextEditor />} />
           <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="/chat-history" element={<ChatHistory />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
         </Route>
       </Routes>
 
