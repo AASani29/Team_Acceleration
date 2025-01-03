@@ -13,11 +13,11 @@ cloudinary.config({
 // Controller to upload a PDF
 export const uploadPDF = async (req, res) => {
   try {
-    const { title, caption } = req.body;
+    const { title, caption, banglishText, banglaText } = req.body;
     const file = req.file; // The file sent from the frontend
 
     // Ensure we have all the required data
-    if (!file || !title || !caption) {
+    if (!file || !title || !caption || !banglishText || !banglaText) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -42,6 +42,8 @@ export const uploadPDF = async (req, res) => {
       filePath: result.secure_url, // Store the Cloudinary URL
       isPublic: false, // Default visibility is private
       userId: req.user.id, // Add the user ID from the token
+      banglishText, // Store the Banglish input text
+      banglaText, // Store the translated Bangla output text
     });
 
     await newPDF.save();
