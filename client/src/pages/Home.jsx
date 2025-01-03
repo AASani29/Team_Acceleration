@@ -20,17 +20,17 @@ export default function Home() {
           },
           {
             id: 2,
-            title: "Get Health Tips",
+            title: "Text-Editor",
             description:
-              "Receive personalized health tips based on your preferences and lifestyle.",
+              "A smart text editor to effortlessly convert Banglish stories into perfect Bangla, enhancing creativity!",
             color: "text-green-500",
             path: "/get-health-tips",
           },
           {
             id: 3,
-            title: "View Progress",
+            title: "Analytic Dashboard",
             description:
-              "Monitor your progress with detailed insights and analytics.",
+              "An intuitive dashboard showcasing word counts, stories written, and engagement stats for deeper insights!",
             color: "text-purple-500",
             path: "/view-progress",
           },
