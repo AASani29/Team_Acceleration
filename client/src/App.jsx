@@ -9,7 +9,7 @@ import ChatHistory from "./pages/ChatHistory";
 import Header from "./components/Header";
 import Footer from "./components/Footer"; // Add this if you plan to include a footer
 import PrivateRoute from "./components/PrivateRoute";
-
+import FloatingChatbot from "./components/Chatbot";
 export default function App() {
   return (
     <BrowserRouter>
@@ -35,6 +35,7 @@ export default function App() {
 
       {/* Shared Footer */}
       <Footer />
+      <FloatingChatbot iconSrc="/chatbot.png"/>
     </BrowserRouter>
   );
 }
