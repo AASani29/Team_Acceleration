@@ -265,6 +265,7 @@ const TextEditor = () => {
       const response = await fetch('/api/pdf/upload', {
         method: 'POST',
         body: formData,
+        credentials: "include", 
       });
 
       if (response.ok) {

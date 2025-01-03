@@ -1,3 +1,4 @@
+// controllers/pdf.controller.js
 import PDF from "../models/pdf.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
@@ -20,6 +21,11 @@ export const uploadPDF = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Ensure the userId is available from the token (passed via middleware)
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "User not authenticated." });
+    }
+
     // Upload the PDF to Cloudinary
     const result = await cloudinary.uploader.upload(file.path, {
       resource_type: "raw", // Use "raw" for non-image files like PDFs
@@ -29,12 +35,13 @@ export const uploadPDF = async (req, res) => {
     // Remove the local file after upload (the file is stored temporarily in 'uploads' folder)
     await fs.unlink(file.path);
 
-    // Save the PDF details in the database
+    // Save the PDF details in the database, now with the userId
     const newPDF = new PDF({
       title,
       caption,
       filePath: result.secure_url, // Store the Cloudinary URL
       isPublic: false, // Default visibility is private
+      userId: req.user.id, // Add the user ID from the token
     });
 
     await newPDF.save();
@@ -45,4 +52,3 @@ export const uploadPDF = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
-
