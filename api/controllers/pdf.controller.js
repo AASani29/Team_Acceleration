@@ -13,11 +13,11 @@ cloudinary.config({
 // Controller to upload a PDF
 export const uploadPDF = async (req, res) => {
   try {
-    const { title, caption } = req.body;
+    const { title, caption, banglishText, banglaText } = req.body;
     const file = req.file; // The file sent from the frontend
 
     // Ensure we have all the required data
-    if (!file || !title || !caption) {
+    if (!file || !title || !caption || !banglishText || !banglaText) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -42,6 +42,8 @@ export const uploadPDF = async (req, res) => {
       filePath: result.secure_url, // Store the Cloudinary URL
       isPublic: false, // Default visibility is private
       userId: req.user.id, // Add the user ID from the token
+      banglishText, // Store the Banglish input text
+      banglaText, // Store the translated Bangla output text
     });
 
     await newPDF.save();
@@ -89,6 +91,28 @@ export const makePDFPublic = async (req, res) => {
     res.status(200).json({ message: "PDF is now public.", pdf });
   } catch (error) {
     console.error("Error making PDF public:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+// Controller to make a PDF private (set isPublic to false)
+export const makePDFPrivate = async (req, res) => {
+  try {
+    const { pdfId } = req.body;  // Get the PDF ID from the request body
+
+    // Ensure the PDF exists and belongs to the logged-in user
+    const pdf = await PDF.findOne({ _id: pdfId, userId: req.user.id });
+
+    if (!pdf) {
+      return res.status(404).json({ message: "PDF not found or doesn't belong to the user." });
+    }
+
+    // Update the isPublic field to false (make the PDF private)
+    pdf.isPublic = false;
+    await pdf.save();
+
+    res.status(200).json({ message: "PDF is now private.", pdf });
+  } catch (error) {
+    console.error("Error making PDF private:", error.message);
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };

@@ -24,6 +24,14 @@ const pdfSchema = new mongoose.Schema(
       ref: 'User',
       required: true,  // Ensure a userId is always associated with the PDF
     },
+    banglishText: { // Store the Banglish input text
+      type: String,
+      required: true,
+    },
+    banglaText: { // Store the translated Bangla output text
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
