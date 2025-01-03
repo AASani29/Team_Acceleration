@@ -28,7 +28,7 @@ export default function Header() {
             </li>
             <li>
               <Link
-                to="/chat"
+                to="/chatbot"
                 className="text-gray-300 hover:text-green-400 transition duration-300"
               >
                 Chatbot

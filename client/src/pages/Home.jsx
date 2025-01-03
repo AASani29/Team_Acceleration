@@ -12,9 +12,9 @@ export default function Home() {
         setFeatures([
           {
             id: 1,
-            title: "Track Mood",
+            title: "AI Chatbot",
             description:
-              "A chatbot interface to record your current mood and offer mindfulness exercises.",
+              "An AI-powered chatbot that seamlessly converts Banglish text into fluent Bangla, making communication simple, fast, and effective!.",
             color: "text-blue-500",
             path: "/track-mood",
           },
@@ -71,13 +71,16 @@ export default function Home() {
         </div>
 
         {/* Call-to-Action Section */}
-        <div className="mt-12 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Ready to take control of your health?
+        <div className="mt-16 text-center">
+          {/* Heading */}
+          <h2 className="text-3xl font-bold text-gray-800 mb-10">
+            Transform how you communicate!
           </h2>
+
+          {/* Button */}
           <Link
             to="/get-started"
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-300"
+            className="px-8 py-4 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 hover:shadow-xl transition-transform duration-300 transform hover:-translate-y-1 text-lg font-medium"
           >
             Get Started
           </Link>

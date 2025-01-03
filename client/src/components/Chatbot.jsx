@@ -93,9 +93,9 @@ const FloatingChatbot = () => {
           className="w-28 h-16 -mr-2 -ml-4" // Slight left shift for the image
         />
         <div>
-          <h1 className="text-lg font-bold">SoulMate</h1>
+          <h1 className="text-lg font-bold">BanglishBaba</h1>
           <p className="text-sm text-teal-200">
-            Your mental health support. Ask me anything.
+          Your AI Companion, Transforming Banglish into Fluent Bangla Instantly!
           </p>
         </div>
       </div>
