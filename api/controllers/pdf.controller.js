@@ -70,3 +70,25 @@ export const getUserPDFs = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+// Controller to update isPublic to true for a PDF
+export const makePDFPublic = async (req, res) => {
+  try {
+    const { pdfId } = req.body;  // Get the PDF ID from the request body
+
+    // Ensure the PDF exists and belongs to the logged-in user
+    const pdf = await PDF.findOne({ _id: pdfId, userId: req.user.id });
+
+    if (!pdf) {
+      return res.status(404).json({ message: "PDF not found or doesn't belong to the user." });
+    }
+
+    // Update the isPublic field
+    pdf.isPublic = true;
+    await pdf.save();
+
+    res.status(200).json({ message: "PDF is now public.", pdf });
+  } catch (error) {
+    console.error("Error making PDF public:", error.message);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};

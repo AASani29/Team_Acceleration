@@ -154,6 +154,34 @@ export default function Profile() {
       console.log(error);
     }
   };
+  const handleMakePublic = async (pdfId) => {
+  try {
+    const response = await fetch("/api/pdf/make-public", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentUser.token}`,
+      },
+      body: JSON.stringify({ pdfId }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setUserPDFs((prevPDFs) =>
+        prevPDFs.map((pdf) =>
+          pdf._id === pdfId ? { ...pdf, isPublic: true } : pdf
+        )
+      );
+      alert(data.message); // Display success message
+    } else {
+      alert(data.message || "Failed to update PDF visibility.");
+    }
+  } catch (error) {
+    console.error("Error making PDF public:", error);
+    alert("Error making PDF public.");
+  }
+};
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -226,23 +254,34 @@ export default function Profile() {
       </div>
 
       {/* Display PDFs */}
-      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Your PDFs</h2>
-        <ul className="space-y-3">
-          {userPDFs.length > 0 ? (
-            userPDFs.map((pdf) => (
-              <li key={pdf._id} className="bg-gray-100 p-3 rounded-lg shadow-md">
-                <a href={pdf.filePath} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                  {pdf.title}
-                </a>
-                <p className="text-gray-600">{pdf.caption}</p>
-              </li>
-            ))
-          ) : (
-            <p className="text-gray-500">No PDFs found.</p>
-          )}
-        </ul>
-      </div>
+       <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Your PDFs</h2>
+    <ul className="space-y-3">
+      {userPDFs.length > 0 ? (
+        userPDFs.map((pdf) => (
+          <li key={pdf._id} className="bg-gray-100 p-3 rounded-lg shadow-md">
+            <a href={pdf.filePath} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+              {pdf.title}
+            </a>
+            <p className="text-gray-600">{pdf.caption}</p>
+            {!pdf.isPublic && (
+              <button
+                onClick={() => handleMakePublic(pdf._id)}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg mt-2"
+              >
+                Make Public
+              </button>
+            )}
+            {pdf.isPublic && (
+              <span className="text-green-500 mt-2">This PDF is public.</span>
+            )}
+          </li>
+        ))
+      ) : (
+        <p className="text-gray-500">No PDFs found.</p>
+      )}
+    </ul>
+  </div>
 
       {/* Dynamic Form Section */}
       <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
