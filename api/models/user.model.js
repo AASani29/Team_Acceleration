@@ -21,8 +21,13 @@ const userSchema = new mongoose.Schema(
       default:
         'https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg',
     },
+    coverPicture: {
+      type: String,
+      default:
+        'https://img.freepik.com/free-photo/beautiful-shot-sunset-beach-sea_181624-38045.jpg', // Default cover picture URL
+    },
   },
-  { timestamps: true }
+  { timestamps: true } // Automatically add createdAt and updatedAt fields
 );
 
 const User = mongoose.model('User', userSchema);

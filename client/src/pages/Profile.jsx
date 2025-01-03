@@ -1,5 +1,5 @@
-import { useSelector } from "react-redux";
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   getDownloadURL,
   getStorage,
@@ -7,7 +7,6 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
-import { useDispatch } from "react-redux";
 import {
   updateUserStart,
   updateUserSuccess,
@@ -17,45 +16,63 @@ import {
   deleteUserFailure,
   signOut,
 } from "../redux/user/userSlice";
-import Header from "../components/Header";
 
 export default function Profile() {
   const dispatch = useDispatch();
   const fileRef = useRef(null);
+  const coverRef = useRef(null);
   const [image, setImage] = useState(undefined);
+  const [coverImage, setCoverImage] = useState(undefined);
   const [imagePercent, setImagePercent] = useState(0);
+  const [coverPercent, setCoverPercent] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // Add this
+  const [successMessage, setSuccessMessage] = useState(""); // Add this
 
   const { currentUser, loading, error } = useSelector((state) => state.user);
+
   useEffect(() => {
     if (image) {
-      handleFileUpload(image);
+      handleFileUpload(image, "profilePicture");
     }
-  }, [image]);
-  const handleFileUpload = async (image) => {
+    if (coverImage) {
+      handleFileUpload(coverImage, "coverPicture");
+    }
+  }, [image, coverImage]);
+
+  const handleFileUpload = async (file, type) => {
     const storage = getStorage(app);
-    const fileName = new Date().getTime() + image.name;
+    const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, image);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setImagePercent(Math.round(progress));
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        if (type === "profilePicture") {
+          setImagePercent(Math.round(progress));
+        } else {
+          setCoverPercent(Math.round(progress));
+        }
       },
       (error) => {
         setImageError(true);
       },
       () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) =>
-          setFormData({ ...formData, profilePicture: downloadURL })
-        );
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          if (type === "profilePicture") {
+            setFormData({ ...formData, profilePicture: downloadURL });
+          } else {
+            setFormData({ ...formData, coverPicture: downloadURL });
+          }
+        });
       }
     );
   };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -63,23 +80,31 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      dispatch(updateUserStart());
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${currentUser.token}`,
         },
         body: JSON.stringify(formData),
       });
+
       const data = await res.json();
-      if (data.success === false) {
-        dispatch(updateUserFailure(data));
+      console.log("Response Status:", res.status);
+      console.log("Response Data:", data);
+
+      if (!res.ok) {
+        setErrorMessage(data.message || "An error occurred while updating the profile."); // Fix here
+        setSuccessMessage(""); // Clear success message
         return;
       }
-      dispatch(updateUserSuccess(data));
-      setUpdateSuccess(true);
-    } catch (error) {
-      dispatch(updateUserFailure(error));
+
+      setSuccessMessage("Profile updated successfully!"); // Fix here
+      setErrorMessage(""); // Clear error message
+    } catch (err) {
+      console.error("Error in request:", err);
+      setErrorMessage("An error occurred while updating the profile."); // Fix here
+      setSuccessMessage(""); // Clear success message
     }
   };
 
@@ -90,7 +115,7 @@ export default function Profile() {
         method: "DELETE",
       });
       const data = await res.json();
-      if (data.success === false) {
+      if (!data.success) {
         dispatch(deleteUserFailure(data));
         return;
       }
@@ -108,19 +133,35 @@ export default function Profile() {
       console.log(error);
     }
   };
+
   return (
-    
-    <div className="bg-white min-h-screen ">
-      {/* header */}
-     
-      <div className="p-4 max-w-lg mx-auto  mb-2 p-5 rounded-lg shadow-lg">
-        
-
-
-        <h1 className="text-3xl font-bold text-center my-7 text-green-700">
-          Profile
-        </h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="bg-gray-100 min-h-screen">
+      {/* Cover Photo */}
+      <div className="relative w-full h-64 bg-gray-200">
+        <input
+          type="file"
+          ref={coverRef}
+          hidden
+          accept="image/*"
+          onChange={(e) => setCoverImage(e.target.files[0])}
+        />
+        <div className="relative w-full h-full">
+          <img
+            src={formData.coverPicture || currentUser.coverPicture || "/cover.jpg"}
+            alt="Cover"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-4 right-4">
+            <button
+              className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-400 transition"
+              onClick={() => coverRef.current.click()}
+            >
+              Change Cover Photo
+            </button>
+          </div>
+        </div>
+        {/* Profile Picture */}
+        <div className="absolute bottom-[-50px] left-1/2 transform -translate-x-1/2">
           <input
             type="file"
             ref={fileRef}
@@ -131,30 +172,48 @@ export default function Profile() {
           <img
             src={formData.profilePicture || currentUser.profilePicture}
             alt="profile"
-            className="h-24 w-24 self-center cursor-pointer rounded-full object-cover mt-2"
+            className="h-32 w-32 rounded-full border-4 border-white object-cover shadow-md cursor-pointer"
             onClick={() => fileRef.current.click()}
           />
-          <p className="text-sm self-center">
-            {imageError ? (
-              <span className="text-red-700">
-                Error uploading image (file size must be less than 2 MB)
-              </span>
-            ) : imagePercent > 0 && imagePercent < 100 ? (
-              <span className="text-slate-700">{`Uploading: ${imagePercent} %`}</span>
-            ) : imagePercent === 100 ? (
-              <span className="text-green-700">
-                Image uploaded successfully
-              </span>
-            ) : (
-              ""
-            )}
-          </p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="text-center mt-16">
+        <h1 className="text-3xl font-bold text-gray-800">{currentUser.username}</h1>
+        <p className="text-gray-600">{currentUser.email}</p>
+        <p className="text-gray-500">"Your Bio Goes Here"</p>
+
+        {/* Action Buttons */}
+        <div className="flex justify-center mt-4 space-x-4">
+          <button className="px-6 py-2 bg-[#2D3748] text-white font-semibold rounded-lg shadow hover:bg-[#1A202C] transition">
+            Add Bio
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-400 transition"
+          >
+            Sign Out
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="px-6 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-400 transition"
+          >
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      {/* Dynamic Form Section */}
+      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Update Profile</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             defaultValue={currentUser.username}
             type="text"
             id="username"
             placeholder="Username"
-            className="bg-sky-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             onChange={handleChange}
           />
           <input
@@ -162,39 +221,25 @@ export default function Profile() {
             type="email"
             id="email"
             placeholder="Email"
-            className="bg-sky-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             onChange={handleChange}
           />
           <input
             type="password"
             id="password"
             placeholder="Password"
-            className="bg-sky-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             onChange={handleChange}
           />
-          <button className="bg-sky-700 text-white font-semibold p-3 rounded-lg uppercase hover:bg-sky-500">
-            {loading ? "Loading..." : "Update"}
+          <button className="bg-blue-500 text-white font-semibold p-3 rounded-lg hover:bg-blue-400 transition">
+            {loading ? "Updating..." : "Update Profile"}
           </button>
         </form>
-        <div className="flex justify-between mt-5">
-          <span
-            onClick={handleDeleteAccount}
-            className="text-red-400 cursor-pointer font-semibold hover:text-red-500"
-          >
-            Delete Account
-          </span>
-          <span
-            onClick={handleSignOut}
-            className="text-green-500 font-semibold hover:text-blue-400 cursor-pointer"
-          >
-            Sign out
-          </span>
-        </div>
-        <p className="text-red-700 mt-5 font-semibold text-center">
-          {error && "Something went wrong!"}
+        <p className="text-green-500 mt-4 text-center">
+          {successMessage} {/* Show success message */}
         </p>
-        <p className="text-green-300 mt-5 font-semibold text-center">
-          {updateSuccess && "User is updated successfully!"}
+        <p className="text-red-500 mt-4 text-center">
+          {errorMessage} {/* Show error message */}
         </p>
       </div>
     </div>
