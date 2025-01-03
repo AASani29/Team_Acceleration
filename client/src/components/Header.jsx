@@ -36,6 +36,14 @@ export default function Header() {
             </li>
             <li>
               <Link
+                to="/editor"
+                className="text-gray-300 hover:text-green-400 transition duration-300"
+              >
+                Editor
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/admin/dashboard"
                 className="text-gray-300 hover:text-green-400 transition duration-300"
               >
@@ -89,6 +97,14 @@ export default function Header() {
                 className="text-gray-300 hover:text-green-400 transition duration-300"
               >
                 Chatbot
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/editor"
+                className="text-gray-300 hover:text-green-400 transition duration-300"
+              >
+                Editor
               </Link>
             </li>
             <li>
