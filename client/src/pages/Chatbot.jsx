@@ -70,11 +70,9 @@ const Chatbot = () => {
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         {/* Title and Subtext Section */}
         <div className="text-center px-6 py-8">
-          {/* Title with Padding */}
           <h2 className="text-3xl font-bold text-gray-800 mb-6">
             Welcome to BanglishBaba!
           </h2>
-          {/* Subtext in Italics */}
           <p className="text-gray-600 italic">
             Use our AI-powered chatbot to transform Banglish into fluent Bangla.
           </p>
@@ -117,7 +115,8 @@ const Chatbot = () => {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              className="mt-2 w-full py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#0C2145" }}
             >
               {loading ? "Thinking..." : "Send"}
             </button>

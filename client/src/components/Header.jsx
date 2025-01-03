@@ -5,13 +5,13 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
 
   return (
-    <header className="bg-gray-800 text-white shadow-md">
+    <header className="bg-white text-[#002a62] shadow-md">
       {/* Header container */}
       <div className="container mx-auto px-4 flex justify-between items-center py-2">
-        {/* Logo Section */}
-        <div className="flex items-center">
+        {/* Logo Section with increased left padding */}
+        <div className="flex items-center pl-8">
           <Link to="/">
-            <img src="/Logo (2).png" alt="Logo" width={120} height={60} />
+            <img src="/Blingo.png" alt="Logo" width={120} height={60} />
           </Link>
         </div>
 
@@ -21,7 +21,7 @@ export default function Header() {
             <li>
               <Link
                 to="/"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Home
               </Link>
@@ -29,7 +29,7 @@ export default function Header() {
             <li>
               <Link
                 to="/chatbot"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Chatbot
               </Link>
@@ -37,7 +37,7 @@ export default function Header() {
             <li>
               <Link
                 to="/editor"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Editor
               </Link>
@@ -45,7 +45,7 @@ export default function Header() {
             <li>
               <Link
                 to="/admin/dashboard"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Dashboard
               </Link>
@@ -60,10 +60,10 @@ export default function Header() {
               <img
                 src={currentUser.profilePicture}
                 alt="profile"
-                className="h-10 w-10 rounded-full object-cover border-2 border-white"
+                className="h-10 w-10 rounded-full object-cover border-2 border-[#002a62]"
               />
             ) : (
-              <span className="text-green-400 hover:text-gray-400 transition duration-300">
+              <span className="text-blue-600 hover:text-[#002a62] transition duration-300">
                 Sign In
               </span>
             )}
@@ -72,13 +72,13 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu */}
-      <div className="md:hidden bg-gray-700">
+      <div className="md:hidden bg-white text-[#002a62]">
         <nav>
           <ul className="flex flex-col space-y-2 p-4">
             <li>
               <Link
                 to="/"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Home
               </Link>
@@ -86,7 +86,7 @@ export default function Header() {
             <li>
               <Link
                 to="/auth/login"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Login
               </Link>
@@ -94,7 +94,7 @@ export default function Header() {
             <li>
               <Link
                 to="/chat"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Chatbot
               </Link>
@@ -102,7 +102,7 @@ export default function Header() {
             <li>
               <Link
                 to="/editor"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Editor
               </Link>
@@ -110,7 +110,7 @@ export default function Header() {
             <li>
               <Link
                 to="/dashboard"
-                className="text-gray-300 hover:text-green-400 transition duration-300"
+                className="text-[#002a62] hover:text-blue-600 transition duration-300"
               >
                 Dashboard
               </Link>

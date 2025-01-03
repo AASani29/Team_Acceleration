@@ -28,8 +28,8 @@ export default function Profile() {
   const [imageError, setImageError] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // Add this
-  const [successMessage, setSuccessMessage] = useState(""); // Add this
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const { currentUser, loading, error } = useSelector((state) => state.user);
 
@@ -90,21 +90,19 @@ export default function Profile() {
       });
 
       const data = await res.json();
-      console.log("Response Status:", res.status);
-      console.log("Response Data:", data);
 
       if (!res.ok) {
-        setErrorMessage(data.message || "An error occurred while updating the profile."); // Fix here
-        setSuccessMessage(""); // Clear success message
+        setErrorMessage(data.message || "An error occurred while updating the profile.");
+        setSuccessMessage("");
         return;
       }
 
-      setSuccessMessage("Profile updated successfully!"); // Fix here
-      setErrorMessage(""); // Clear error message
+      setSuccessMessage("Profile updated successfully!");
+      setErrorMessage("");
     } catch (err) {
       console.error("Error in request:", err);
-      setErrorMessage("An error occurred while updating the profile."); // Fix here
-      setSuccessMessage(""); // Clear success message
+      setErrorMessage("An error occurred while updating the profile.");
+      setSuccessMessage("");
     }
   };
 
@@ -231,15 +229,15 @@ export default function Profile() {
             className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
             onChange={handleChange}
           />
-          <button className="bg-blue-500 text-white font-semibold p-3 rounded-lg hover:bg-blue-400 transition">
+          <button className="bg-black text-white font-semibold p-3 rounded-lg hover:bg-gray-800 transition">
             {loading ? "Updating..." : "Update Profile"}
           </button>
         </form>
         <p className="text-green-500 mt-4 text-center">
-          {successMessage} {/* Show success message */}
+          {successMessage}
         </p>
         <p className="text-red-500 mt-4 text-center">
-          {errorMessage} {/* Show error message */}
+          {errorMessage}
         </p>
       </div>
     </div>

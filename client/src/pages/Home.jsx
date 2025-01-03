@@ -14,7 +14,7 @@ export default function Home() {
             id: 1,
             title: "AI Chatbot",
             description:
-              "An AI-powered chatbot that seamlessly converts Banglish text into fluent Bangla, making communication simple, fast, and effective!.",
+              "An AI-powered chatbot that seamlessly converts Banglish text into fluent Bangla, making communication simple, fast, and effective!",
             color: "text-blue-500",
             path: "/track-mood",
           },
@@ -80,7 +80,7 @@ export default function Home() {
           {/* Button */}
           <Link
             to="/get-started"
-            className="px-8 py-4 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 hover:shadow-xl transition-transform duration-300 transform hover:-translate-y-1 text-lg font-medium"
+            className="px-8 py-4 bg-blue-900 text-white rounded-lg shadow-lg hover:bg-blue-800 hover:shadow-xl transition-transform duration-300 transform hover:-translate-y-1 text-lg font-medium"
           >
             Get Started
           </Link>
