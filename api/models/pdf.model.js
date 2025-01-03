@@ -18,11 +18,6 @@ const pdfSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Default to private
     },
-    ownerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true, // Associate the PDF with a specific user
-    },
   },
   { timestamps: true }
 );
