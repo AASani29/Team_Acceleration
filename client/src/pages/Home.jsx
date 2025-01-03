@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import Hero from "../components/Hero";
 
 export default function Home() {
-  // State for dynamic feature data
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Simulate fetching data (can be replaced with an API call)
   useEffect(() => {
     const fetchFeatures = () => {
       setTimeout(() => {
@@ -37,17 +35,17 @@ export default function Home() {
             path: "/view-progress",
           },
         ]);
-        setLoading(false); // Simulate loading complete
-      }, 1000); // Simulate a 1-second delay
+        setLoading(false);
+      }, 1000);
     };
 
     fetchFeatures();
   }, []);
 
   return (
-    <div className="bg-white min-h-screen flex flex-col items-center justify-between px-4 md:px-8">
+    <div className="bg-white min-h-screen flex flex-col items-center justify-between px-4 md:px-8 pt-16 pb-16">
       {/* Main Content */}
-      <div className="flex flex-col items-center mt-4">
+      <div className="flex flex-col items-center">
         <Hero />
 
         {/* Features Section */}
