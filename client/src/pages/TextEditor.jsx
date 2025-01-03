@@ -154,7 +154,7 @@ const TextEditor = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const handlePost = async () => {
+ const handlePost = async () => {
   setLoading(true);
   try {
     const aiResponse = await groq.chat.completions.create({
@@ -179,12 +179,25 @@ const TextEditor = () => {
     setPostTitle(title);
     setPostCaption(caption);
 
-    // Create the PDF and set the title as the file name
+    // Generate the translated Bangla content (this must be handled separately)
+    const banglaTranslation = banglaText; // Replace this with your Bangla text
+
+    // Create the PDF and format text properly
     const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 10;
+    const maxWidth = pageWidth - margin * 2;
+
     pdf.setFontSize(20);
-    pdf.text(title, 10, 30);
+    pdf.text(title, margin, 30, { maxWidth });
     pdf.setFontSize(12);
-    pdf.text(caption, 10, 50); // Adjusted vertical position for better layout
+    pdf.text(caption, margin, 50, { maxWidth });
+
+    // Add the Bangla content
+    pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
+    pdf.setFontSize(14);
+    pdf.text(banglaTranslation, margin, 70, { maxWidth });
+
     const fileName = `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`;
     pdf.save(fileName);
 
@@ -196,6 +209,7 @@ const TextEditor = () => {
     setLoading(false);
   }
 };
+
 
 
   return (
