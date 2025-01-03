@@ -8,7 +8,7 @@ import path from 'path';
 import pdfRoutes from './routes/pdf.route.js';
 
 
-
+import updateCsvRoutes from "./routes/csv.js"; 
 
 
 // Load environment variables
@@ -44,6 +44,7 @@ app.use(express.static(path.join(__dirname, 'client', 'dist')));
 app.use('/api/user', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/pdf", pdfRoutes);
+app.use("/api", updateCsvRoutes);
 
 // Catch-all route for serving the client
 app.get('*', (req, res) => {

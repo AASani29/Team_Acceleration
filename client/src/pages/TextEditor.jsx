@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Groq } from "groq-sdk";
 import jsPDF from "jspdf";
+import { saveAs } from "file-saver";
+
 
 const TextEditor = () => {
   const [banglishText, setBanglishText] = useState('');
@@ -210,7 +212,83 @@ const TextEditor = () => {
   //   }
   // };
 
-  const handlePost = async () => {
+//   const handlePost = async () => {
+//   setLoading(true);
+//   try {
+//     const aiResponse = await groq.chat.completions.create({
+//       model: "llama-3.3-70b-versatile",
+//       temperature: 0.7,
+//       max_tokens: 200,
+//       messages: [
+//         {
+//           role: "system",
+//           content: `You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.`,
+//         },
+//         {
+//           role: "user",
+//           content: `Generate a title and caption for this content: ${banglishText}`,
+//         },
+//       ],
+//     });
+
+//     const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
+//     const [title, caption] = aiResponseContent.split("\n");
+
+//     setPostTitle(title);
+//     setPostCaption(caption);
+
+//     // Generate the translated Bangla content (this must be handled separately)
+//     const banglaTranslation = banglaText;
+
+//     // Create the PDF and format text properly
+//     const pdf = new jsPDF();
+//     const pageWidth = pdf.internal.pageSize.getWidth();
+//     const margin = 10;
+//     const maxWidth = pageWidth - margin * 2;
+
+//     pdf.setFontSize(20);
+//     pdf.text(title, margin, 30, { maxWidth });
+//     pdf.setFontSize(12);
+//     pdf.text(caption, margin, 50, { maxWidth });
+
+//     // Add the Bangla content
+//     pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
+//     pdf.setFontSize(14);
+//     pdf.text(banglaTranslation, margin, 70, { maxWidth });
+
+//     // Generate the PDF as a Blob
+//     const pdfBlob = pdf.output('blob');
+//     const formData = new FormData();
+//     formData.append('pdf', pdfBlob, `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`);
+//     formData.append('title', title);
+//     formData.append('caption', caption);
+//     formData.append('banglishText', banglishText);  // Send the Banglish input
+//     formData.append('banglaText', banglaTranslation);  // Send the translated Bangla output
+
+//     // Send the form data to the backend
+//     const response = await fetch('/api/pdf/upload', {
+//       method: 'POST',
+//       body: formData,
+//       credentials: "include",
+//     });
+
+//     if (response.ok) {
+//       alert('PDF uploaded successfully!');
+//     } else {
+//       alert('Failed to upload PDF');
+//     }
+
+//     alert(`Post generated! Title: ${title}, Caption: ${caption}`);
+//   } catch (error) {
+//     console.error("Error generating post:", error);
+//     alert("Failed to generate post!");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+const handlePost = async () => {
   setLoading(true);
   try {
     const aiResponse = await groq.chat.completions.create({
@@ -235,55 +313,73 @@ const TextEditor = () => {
     setPostTitle(title);
     setPostCaption(caption);
 
-    // Generate the translated Bangla content (this must be handled separately)
+    // Generate the translated Bangla content
     const banglaTranslation = banglaText;
 
-    // Create the PDF and format text properly
+    // Append new data to the CSV on the server
+    const appendToCSV = async (banglaText, banglishText) => {
+      try {
+        const response = await fetch("/api/update-csv", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ banglaText, banglishText }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update CSV");
+        }
+
+        console.log("CSV updated successfully");
+      } catch (error) {
+        console.error("Error updating CSV:", error);
+      }
+    };
+
+    // Call appendToCSV after generating Bangla and Banglish text
+    await appendToCSV(banglaTranslation, banglishText);
+
+    // PDF creation/upload logic...
     const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 10;
-    const maxWidth = pageWidth - margin * 2;
+    pdf.text(title, 10, 30);
+    pdf.text(caption, 10, 50);
+    pdf.text(banglaTranslation, 10, 70);
+    const pdfBlob = pdf.output("blob");
 
-    pdf.setFontSize(20);
-    pdf.text(title, margin, 30, { maxWidth });
-    pdf.setFontSize(12);
-    pdf.text(caption, margin, 50, { maxWidth });
-
-    // Add the Bangla content
-    pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
-    pdf.setFontSize(14);
-    pdf.text(banglaTranslation, margin, 70, { maxWidth });
-
-    // Generate the PDF as a Blob
-    const pdfBlob = pdf.output('blob');
     const formData = new FormData();
-    formData.append('pdf', pdfBlob, `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`);
-    formData.append('title', title);
-    formData.append('caption', caption);
-    formData.append('banglishText', banglishText);  // Send the Banglish input
-    formData.append('banglaText', banglaTranslation);  // Send the translated Bangla output
+    formData.append("pdf", pdfBlob);
+    formData.append("title", title);
+    formData.append("caption", caption);
+    formData.append("banglishText", banglishText);
+    formData.append("banglaText", banglaTranslation);
 
-    // Send the form data to the backend
-    const response = await fetch('/api/pdf/upload', {
-      method: 'POST',
+    const response = await fetch("/api/pdf/upload", {
+      method: "POST",
       body: formData,
       credentials: "include",
     });
 
     if (response.ok) {
-      alert('PDF uploaded successfully!');
+      alert("PDF uploaded successfully!");
     } else {
-      alert('Failed to upload PDF');
+      alert("Failed to upload PDF");
     }
-
-    alert(`Post generated! Title: ${title}, Caption: ${caption}`);
   } catch (error) {
-    console.error("Error generating post:", error);
-    alert("Failed to generate post!");
+    console.error("Error:", error);
   } finally {
     setLoading(false);
   }
 };
+
+
+ 
+ 
+
+
+
+
+
 
 
 
