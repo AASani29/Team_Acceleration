@@ -37,7 +37,7 @@ export default function SignIn() {
         return;
       }
       dispatch(signInSuccess(data));
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       dispatch(signInFailure(error));
     }

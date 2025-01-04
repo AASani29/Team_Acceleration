@@ -17,7 +17,7 @@ export default function Hero() {
           </h1>
           <p className="text-lg text-gray-600 mb-4">
             We bring together the best of both worlds – Banglish and Bangla.
-            BanglishBaba ensures seamless communication by effortlessly
+            Blingo ensures seamless communication by effortlessly
             converting Banglish to authentic Bangla, enabling you to express
             yourself with clarity and cultural richness. Whether you’re creating
             content, learning the language, or simply chatting, we’re here to

@@ -16,7 +16,7 @@ export default function Home() {
             description:
               "An AI-powered chatbot that seamlessly converts Banglish text into fluent Bangla, making communication simple, fast, and effective!",
             color: "text-blue-500",
-            path: "/track-mood",
+            path: "/chatbot",
           },
           {
             id: 2,
@@ -24,7 +24,7 @@ export default function Home() {
             description:
               "A smart text editor to effortlessly convert Banglish stories into perfect Bangla, enhancing creativity!",
             color: "text-green-500",
-            path: "/get-health-tips",
+            path: "/editor",
           },
           {
             id: 3,
@@ -32,7 +32,7 @@ export default function Home() {
             description:
               "An intuitive dashboard showcasing word counts, stories written, and engagement stats for deeper insights!",
             color: "text-purple-500",
-            path: "/view-progress",
+            path: "/admin/dashboard",
           },
         ]);
         setLoading(false);
