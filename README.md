@@ -97,6 +97,4 @@ The backend is scalable with MongoDB, utilizing environment variables for smooth
 5. **Customizable Bangla Fonts**: Users can choose from various Bangla fonts when exporting PDFs.
 6. **Dockerization**: Ensures consistency in development, testing, and production environments.
 
-# Link:
-The app is deployed on Render and can be accessed via the link below:
-[Authentication](https://authentication-2-tzt5.onrender.com/)
+
