@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Groq } from "groq-sdk";
 import jsPDF from "jspdf";
 import { saveAs } from "file-saver";
 
 
 const TextEditor = () => {
-  const [banglishText, setBanglishText] = useState("");
-  const [banglaText, setBanglaText] = useState("");
-  const [fontSize, setFontSize] = useState("16px");
-  const [fontFamily, setFontFamily] = useState("Arial");
+  const [banglishText, setBanglishText] = useState('');
+  const [banglaText, setBanglaText] = useState('');
+  const [fontSize, setFontSize] = useState('16px');
+  const [fontFamily, setFontFamily] = useState('Arial');
   const [loading, setLoading] = useState(false);
-  const [pdfTitle, setPdfTitle] = useState("");
-  const [pdfCaption, setPdfCaption] = useState("");
+  const [pdfTitle, setPdfTitle] = useState('');
+  const [pdfCaption, setPdfCaption] = useState('');
+  const [postTitle, setPostTitle] = useState('');
+  const [postCaption, setPostCaption] = useState('');
 
   const groq = new Groq({
     apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -39,7 +41,7 @@ const TextEditor = () => {
 
       const aiResponse = chatCompletion.choices[0]?.message?.content || "No response from AI.";
       setBanglaText(aiResponse);
-      await generateCaption(aiResponse);
+      generateCaption(aiResponse);
     } catch (error) {
       console.error("Error fetching translation:", error);
       alert("Translation failed!");
@@ -57,11 +59,11 @@ const TextEditor = () => {
         messages: [
           {
             role: "system",
-            content: `You are a content assistant. Your task is to generate a short title and caption for a PDF document. The title should be engaging, and the caption should summarize the content succinctly.`,
+            content: `You are a content assistant. Your task is to generate a short title and caption for a PDF document. The title should be engaging, and the caption should summarize the content succinctly. Respond only with the title and caption.`,
           },
           {
             role: "user",
-            content: `Generate a title and caption for the following content: ${text}`,
+            content: `Please generate a title and caption for the following content: ${text}`,
           },
         ],
       });
@@ -69,73 +71,33 @@ const TextEditor = () => {
       const aiResponse = chatCompletion.choices[0]?.message?.content || "No response from AI.";
       const [title, caption] = aiResponse.split("\n");
 
-      setPdfTitle(title || "Untitled PDF");
-      setPdfCaption(caption || "No caption provided.");
+      setPdfTitle(title);
+      setPdfCaption(caption);
     } catch (error) {
-      console.error("Error generating title and caption:", error);
-      alert("Failed to generate title and caption.");
+      console.error("Error generating caption:", error);
     }
   };
 
-  const handlePost = async () => {
-    setLoading(true);
-    try {
-      const pdf = new jsPDF();
-      let currentY = 10;
+  const handleDownloadPDF = () => {
+    const pdf = new jsPDF();
+    pdf.text(banglaText, 10, 10);
 
-      if (pdfTitle) {
-        pdf.setFontSize(20);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(pdfTitle, 10, currentY);
-        currentY += 10;
-      }
-
-      if (pdfCaption) {
-        pdf.setFontSize(12);
-        pdf.setFont("helvetica", "italic");
-        pdf.text(pdfCaption, 10, currentY);
-        currentY += 10;
-      }
-
-      pdf.setFontSize(14);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(banglaText, 10, currentY);
-
-      const pdfBlob = pdf.output("blob");
-
-      const formData = new FormData();
-      formData.append("pdf", pdfBlob, "translated_text.pdf");
-      formData.append("title", pdfTitle);
-      formData.append("caption", pdfCaption);
-      formData.append("banglishText", banglishText);
-      formData.append("banglaText", banglaText);
-
-      const response = await fetch("/api/pdf/upload", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        alert("PDF successfully uploaded and saved to your profile!");
-      } else {
-        const errorData = await response.json();
-        console.error("Upload failed:", errorData);
-        alert(`Failed to upload PDF. Error: ${errorData.message || "Unknown error"}`);
-      }
-
-      pdf.save("translated_text.pdf");
-    } catch (error) {
-      console.error("Error during upload:", error);
-      alert("An error occurred while uploading the PDF.");
-    } finally {
-      setLoading(false);
+    if (pdfTitle) {
+      pdf.setFontSize(20);
+      pdf.text(pdfTitle, 10, 30);
     }
+
+    if (pdfCaption) {
+      pdf.setFontSize(12);
+      pdf.text(pdfCaption, 10, 40);
+    }
+
+    pdf.save('translated_text.pdf');
   };
 
   const handleVoiceInput = () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "en-UK";
+    recognition.lang = 'en-UK'; // Set to Bangla
     recognition.start();
 
     recognition.onresult = (event) => {
@@ -144,23 +106,38 @@ const TextEditor = () => {
     };
 
     recognition.onerror = (event) => {
-      alert("Error with speech recognition!");
+      alert('Error with speech recognition!');
     };
   };
 
   const handleHearText = () => {
     if (!banglaText) {
-      alert("No text to read out!");
+      alert('No text to read out!');
       return;
     }
-  
+
+    if ('speechSynthesis' in window) {
+      console.log('Speech synthesis supported');
+    } else {
+      alert('Your browser does not support speech synthesis.');
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(banglaText);
-  
-    // Handle asynchronous loading of voices
-    const loadVoices = new Promise((resolve) => {
-      let voices = window.speechSynthesis.getVoices();
-      if (voices.length) {
-        resolve(voices);
+
+    const voices = window.speechSynthesis.getVoices();
+    console.log('Available voices:', voices);
+
+    const banglaVoice = voices.find(voice => voice.lang === 'bn-BD');
+
+    if (banglaVoice) {
+      utterance.voice = banglaVoice;
+      console.log('Using Bangla voice:', banglaVoice.name);
+    } else {
+      const englishVoice = voices.find(voice => voice.lang === 'en-US');
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+        console.log('Using English voice:', englishVoice.name);
       } else {
         utterance.voice = voices[0];
         console.log('Using system default voice:', utterance.voice.name);
@@ -189,11 +166,11 @@ const TextEditor = () => {
   //       messages: [
   //         {
   //           role: "system",
-  //           content: `You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.`,
+  //           content: You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.,
   //         },
   //         {
   //           role: "user",
-  //           content: `Generate a title and caption for this content: ${banglishText}`,
+  //           content: Generate a title and caption for this content: ${banglishText},
   //         },
   //       ],
   //     });
@@ -223,10 +200,10 @@ const TextEditor = () => {
   //     pdf.setFontSize(14);
   //     pdf.text(banglaTranslation, margin, 70, { maxWidth });
 
-  //     const fileName = `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`;
+  //     const fileName = ${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf;
   //     pdf.save(fileName);
 
-  //     alert(`Post generated! Title: ${title}, Caption: ${caption}`);
+  //     alert(Post generated! Title: ${title}, Caption: ${caption});
   //   } catch (error) {
   //     console.error("Error generating post:", error);
   //     alert("Failed to generate post!");
@@ -235,7 +212,83 @@ const TextEditor = () => {
   //   }
   // };
 
-  const handlePost = async () => {
+//   const handlePost = async () => {
+//   setLoading(true);
+//   try {
+//     const aiResponse = await groq.chat.completions.create({
+//       model: "llama-3.3-70b-versatile",
+//       temperature: 0.7,
+//       max_tokens: 200,
+//       messages: [
+//         {
+//           role: "system",
+//           content: You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.,
+//         },
+//         {
+//           role: "user",
+//           content: Generate a title and caption for this content: ${banglishText},
+//         },
+//       ],
+//     });
+
+//     const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
+//     const [title, caption] = aiResponseContent.split("\n");
+
+//     setPostTitle(title);
+//     setPostCaption(caption);
+
+//     // Generate the translated Bangla content (this must be handled separately)
+//     const banglaTranslation = banglaText;
+
+//     // Create the PDF and format text properly
+//     const pdf = new jsPDF();
+//     const pageWidth = pdf.internal.pageSize.getWidth();
+//     const margin = 10;
+//     const maxWidth = pageWidth - margin * 2;
+
+//     pdf.setFontSize(20);
+//     pdf.text(title, margin, 30, { maxWidth });
+//     pdf.setFontSize(12);
+//     pdf.text(caption, margin, 50, { maxWidth });
+
+//     // Add the Bangla content
+//     pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
+//     pdf.setFontSize(14);
+//     pdf.text(banglaTranslation, margin, 70, { maxWidth });
+
+//     // Generate the PDF as a Blob
+//     const pdfBlob = pdf.output('blob');
+//     const formData = new FormData();
+//     formData.append('pdf', pdfBlob, ${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf);
+//     formData.append('title', title);
+//     formData.append('caption', caption);
+//     formData.append('banglishText', banglishText);  // Send the Banglish input
+//     formData.append('banglaText', banglaTranslation);  // Send the translated Bangla output
+
+//     // Send the form data to the backend
+//     const response = await fetch('/api/pdf/upload', {
+//       method: 'POST',
+//       body: formData,
+//       credentials: "include",
+//     });
+
+//     if (response.ok) {
+//       alert('PDF uploaded successfully!');
+//     } else {
+//       alert('Failed to upload PDF');
+//     }
+
+//     alert(Post generated! Title: ${title}, Caption: ${caption});
+//   } catch (error) {
+//     console.error("Error generating post:", error);
+//     alert("Failed to generate post!");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+const handlePost = async () => {
   setLoading(true);
   try {
     const aiResponse = await groq.chat.completions.create({
@@ -260,145 +313,151 @@ const TextEditor = () => {
     setPostTitle(title);
     setPostCaption(caption);
 
-    // Generate the translated Bangla content (this must be handled separately)
+    // Generate the translated Bangla content
     const banglaTranslation = banglaText;
 
-    // Create the PDF and format text properly
+    // Append new data to the CSV on the server
+    const appendToCSV = async (banglaText, banglishText) => {
+      try {
+        const response = await fetch("/api/update-csv", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ banglaText, banglishText }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update CSV");
+        }
+
+        console.log("CSV updated successfully");
+      } catch (error) {
+        console.error("Error updating CSV:", error);
+      }
+    };
+
+    // Call appendToCSV after generating Bangla and Banglish text
+    await appendToCSV(banglaTranslation, banglishText);
+
+    // PDF creation/upload logic...
     const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 10;
-    const maxWidth = pageWidth - margin * 2;
+    pdf.text(title, 10, 30);
+    pdf.text(caption, 10, 50);
+    pdf.text(banglaTranslation, 10, 70);
+    const pdfBlob = pdf.output("blob");
 
-    pdf.setFontSize(20);
-    pdf.text(title, margin, 30, { maxWidth });
-    pdf.setFontSize(12);
-    pdf.text(caption, margin, 50, { maxWidth });
-
-    // Add the Bangla content
-    pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
-    pdf.setFontSize(14);
-    pdf.text(banglaTranslation, margin, 70, { maxWidth });
-
-    // Generate the PDF as a Blob
-    const pdfBlob = pdf.output('blob');
     const formData = new FormData();
-    formData.append('pdf', pdfBlob, `${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf`);
-    formData.append('title', title);
-    formData.append('caption', caption);
-    formData.append('banglishText', banglishText);  // Send the Banglish input
-    formData.append('banglaText', banglaTranslation);  // Send the translated Bangla output
+    formData.append("pdf", pdfBlob);
+    formData.append("title", title);
+    formData.append("caption", caption);
+    formData.append("banglishText", banglishText);
+    formData.append("banglaText", banglaTranslation);
 
-    // Send the form data to the backend
-    const response = await fetch('/api/pdf/upload', {
-      method: 'POST',
+    const response = await fetch("/api/pdf/upload", {
+      method: "POST",
       body: formData,
       credentials: "include",
     });
 
     if (response.ok) {
-      alert('PDF uploaded successfully!');
+      alert("PDF uploaded successfully!");
     } else {
-      alert('Failed to upload PDF');
+      alert("Failed to upload PDF");
     }
-
-    alert(`Post generated! Title: ${title}, Caption: ${caption}`);
   } catch (error) {
-    console.error("Error generating post:", error);
-    alert("Failed to generate post!");
+    console.error("Error:", error);
   } finally {
     setLoading(false);
   }
 };
 
 
+ 
+ 
+
+
+
+
+
+
+
 
 
   return (
-    <div className="p-6 bg-gradient-to-b from-blue-50 to-gray-100 min-h-screen">
-      {/* Header */}
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-[#002a62]">Banglish to Bangla Editor</h1>
-        <p className="text-lg text-gray-600 mt-2">
-          Easily translate Banglish to Bangla, save PDFs, and manage your content.
-        </p>
-      </header>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h2 className="text-3xl font-semibold text-center mb-6">Banglish to Bangla Text Editor</h2>
 
-      {/* Input and Output Section Side-by-Side */}
-      <div className="flex justify-center gap-6 mb-6">
-        {/* Input Section */}
-        <div className="flex-1 bg-white shadow-lg rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-[#002a62]">Banglish Input</h2>
-          <textarea
-            placeholder="Type Banglish text here..."
-            value={banglishText}
-            onChange={(e) => setBanglishText(e.target.value)}
-            className="w-full mt-4 h-60 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002a62]"
-            style={{ fontFamily: fontFamily, fontSize: fontSize }}
-          />
-        </div>
-
-        {/* Output Section */}
-        <div className="flex-1 bg-white shadow-lg rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-[#002a62]">Bangla Output</h2>
-          <textarea
-            placeholder="Translated Bangla text will appear here..."
-            value={banglaText}
-            readOnly
-            className="w-full mt-4 h-60 p-3 border border-gray-300 rounded-lg focus:outline-none"
-            style={{ fontFamily: fontFamily, fontSize: fontSize }}
-          />
-        </div>
+      <div className="mb-4">
+        <textarea
+          placeholder="Type Banglish text here..."
+          value={banglishText}
+          onChange={(e) => setBanglishText(e.target.value)}
+          className="w-full h-28 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ fontFamily: fontFamily, fontSize: fontSize }}
+        />
       </div>
 
-      {/* Buttons Section */}
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
+      <div className="flex justify-between mb-4">
         <button
           onClick={handleTranslate}
-          className="px-5 py-2 bg-[#002a62] text-white text-sm font-medium rounded-md hover:bg-[#003b82] transition-all focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          {loading ? "Translating..." : "Translate"}
+          Translate
         </button>
         <button
           onClick={handleVoiceInput}
-          className="px-5 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600 transition-all focus:outline-none focus:ring-2 focus:ring-green-400"
+          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
         >
-          🎤 Voice Input
+          Voice Input
         </button>
+
+      </div>
+
+      <div className="mb-4">
+        <textarea
+          placeholder="Translated Bangla text will appear here..."
+          value={banglaText}
+          readOnly
+          className="w-full h-28 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+          style={{ fontFamily: fontFamily, fontSize: fontSize }}
+        />
+      </div>
+
+      <div className="flex justify-between mb-6">
         <button
           onClick={handlePost}
-          className="px-5 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400"
         >
-          📥 Save & Download PDF
+          Download PDF
         </button>
         <button
           onClick={handleHearText}
-          className="px-5 py-2 bg-teal-500 text-white text-sm font-medium rounded-md hover:bg-teal-600 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
+          className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400"
         >
-          🔊 Hear
+          Hear
         </button>
       </div>
 
-
-      {/* Font Settings Section */}
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-[#002a62] mb-4">Font Settings</h2>
-        <div className="flex items-center justify-between mb-4">
-          <label className="text-lg font-medium text-gray-600">Font Size:</label>
+      <div className="flex flex-col space-y-3 mb-4">
+        <div className="flex items-center space-x-3">
+          <label className="text-lg">Change Font Size: </label>
           <input
             type="number"
             value={parseInt(fontSize)}
             onChange={(e) => setFontSize(`${e.target.value}px`)}
+
             min="10"
             max="30"
-            className="w-20 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002a62]"
+            className="w-24 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div className="flex items-center justify-between">
-          <label className="text-lg font-medium text-gray-600">Font Family:</label>
+        <div className="flex items-center space-x-3">
+          <label className="text-lg">Font Family: </label>
           <select
-            value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
-            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#002a62]"
+            value={fontFamily}
+            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="Arial">Arial</option>
             <option value="Verdana">Verdana</option>
@@ -407,6 +466,9 @@ const TextEditor = () => {
           </select>
         </div>
       </div>
+
+
+
     </div>
   );
 };
