@@ -8,7 +8,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import OAuth from "../components/OAuth";
 
-
 export default function SignIn() {
   const [formData, setFormData] = useState({});
   const { loading, error } = useSelector((state) => state.user);
@@ -44,65 +43,105 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-     
+    <div className="min-h-screen flex flex-row">
+      {/* Left Section */}
+      <div className="hidden md:flex flex-col items-center justify-center w-1/2 bg-gradient-to-br from-blue-700 to-blue-900 text-white px-10">
+        <h1 className="text-4xl font-bold mb-6"> Blingo! 👋</h1>
+        <p className="text-lg leading-relaxed text-gray-200 text-center">
+          Simplify tasks, boost productivity, and achieve goals effortlessly with smart automation
+        </p>
+        <footer className="absolute bottom-4 text-sm text-gray-300">
+          © 2025 Blingo. All rights reserved.
+        </footer>
+      </div>
 
-      <div className="flex flex-col md:flex-row flex-grow">
-        {/* Sign-in Form Section */}
-        <div className="w-full md:w-1/2 bg-white flex items-center justify-center">
-          <div className="p-8 max-w-md w-full bg-white border border-gray-300 rounded-lg shadow-md">
-            <h1 className="text-3xl text-center font-semibold mb-7 text-gray-800">
-              Sign In
-            </h1>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <input
-                type="email"
-                placeholder="Email"
-                id="email"
-                className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                onChange={handleChange}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                id="password"
-                className="bg-gray-100 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                onChange={handleChange}
-              />
-              <button
-                disabled={loading}
-                className="bg-blue-500 text-white p-3 rounded-lg uppercase hover:bg-blue-600 disabled:opacity-80"
-              >
-                {loading ? "Loading..." : "Sign In"}
-              </button>
-              <OAuth />
-            </form>
-            <div className="flex items-center justify-center mt-5">
-              <p className="text-gray-600 font-semibold">
-                Don't have an account?
-              </p>
-              <Link to="/sign-up">
-                <span className="text-blue-500 font-bold text-lg ml-1 hover:underline">
-                  Sign Up
-                </span>
-              </Link>
-            </div>
-            <p className="text-red-600 mt-5">
-              {error ? error.message || "Something went wrong!" : ""}
-            </p>
-          </div>
-        </div>
-
-        {/* Right-Side Section */}
-        <div className="w-full md:w-1/2 bg-white flex items-center justify-center relative">
-          <div className="text-gray-800 text-center p-8">
-            <h2 className="text-2xl italic font-bold mb-4">
-              Inspirational Quote
+      {/* Right Section */}
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <div className="bg-white shadow-lg rounded-xl p-8">
+            <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
+              Welcome Back!
             </h2>
-            <p className="text-lg italic text-gray-600">
-              "One never notices what has been done; one can only see what
-              remains to be done."
+            <p className="text-sm text-gray-500 text-center mb-8">
+              Don’t have an account?{" "}
+              <Link
+                to="/sign-up"
+                className="text-blue-500 font-medium hover:underline"
+              >
+                Create a new account
+              </Link>
+              . It’s FREE and takes less than a minute!
             </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-600 mb-2"
+                >
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-600 mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
+              >
+                {loading ? "Signing In..." : "Login Now"}
+              </button>
+            </form>
+
+            {/* Professional Google Sign-In Button */}
+            <div className="mt-8 flex flex-col items-center">
+              <button
+                className="w-full flex items-center justify-center bg-white border border-gray-300 py-3 rounded-lg shadow-sm font-semibold text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                onClick={() => {
+                  // Handle Google OAuth logic
+                  alert("Google Sign-In clicked");
+                }}
+              >
+                <img
+                  src="/Google.png"
+                  alt="Google Logo"
+                  className="w-5 h-5 mr-3"
+                />
+                Sign in with Google
+              </button>
+            </div>
+            {error && (
+              <p className="text-red-500 text-center mt-4">
+                {error.message || "Something went wrong!"}
+              </p>
+            )}
           </div>
         </div>
       </div>
