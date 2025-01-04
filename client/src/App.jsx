@@ -11,6 +11,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import FloatingChatbot from "./components/Chatbot";
 import Dashboard from "./pages/Dashboard";
 import Search from "./pages/SearchUser";
+import SearchUser from "./pages/SearchPDF";
 export default function App() {
   return (
     <BrowserRouter>
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/searchuser" element={<SearchUser />} />
         </Route>
       </Routes>
 

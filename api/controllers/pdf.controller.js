@@ -116,3 +116,55 @@ export const makePDFPrivate = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+let pdfCache = [];  // Temporary in-memory storage for PDF data
+
+// Function to load all PDFs into memory
+const loadPdfsIntoMemory = async () => {
+  try {
+    // Fetch all PDFs and only select relevant fields: title, caption, banglishText, banglaText
+    pdfCache = await PDF.find({}).select('title caption banglishText banglaText');  // Adjust if necessary
+    console.log('PDFs loaded into memory');
+  } catch (err) {
+    console.error('Error loading PDFs into memory', err);
+  }
+};
+
+// Load PDFs when the server starts
+loadPdfsIntoMemory();
+
+// Optionally, refresh the cache every 5 minutes
+setInterval(loadPdfsIntoMemory, 5 * 60 * 1000);  // Refresh every 5 minutes
+
+// Search PDFs by Banglish or Bangla text
+export const searchPdfByText = async (req, res) => {
+  try {
+    const { searchText } = req.query;
+
+    // Validate input
+    if (!searchText) {
+      return res.status(400).json({ message: "Search text is required" });
+    }
+
+    // Search for PDFs in memory (case-insensitive search)
+    const matchedPdfs = pdfCache.filter(pdf => {
+      // Ensure that both banglishText and banglaText exist and are strings before calling toLowerCase()
+      const banglishText = pdf.banglishText || "";
+      const banglaText = pdf.banglaText || "";
+
+      return (
+        banglishText.toLowerCase().includes(searchText.toLowerCase()) ||
+        banglaText.toLowerCase().includes(searchText.toLowerCase())
+      );
+    });
+
+    if (!matchedPdfs.length) {
+      return res.status(404).json({ message: "No PDFs found" });
+    }
+
+    // Return the matched PDFs with title and caption
+    res.status(200).json(matchedPdfs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
