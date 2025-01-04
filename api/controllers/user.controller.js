@@ -61,3 +61,49 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+let userCache = []; // Temporary in-memory storage for user data
+
+// Function to load all users into memory
+const loadUsersIntoMemory = async () => {
+  try {
+    // Fetch all users and exclude password
+    userCache = await User.find({}).select('-password');
+    console.log('Users loaded into memory');
+  } catch (err) {
+    console.error('Error loading users into memory', err);
+  }
+};
+
+// Load users when the server starts
+loadUsersIntoMemory();
+
+// Optionally, you can refresh this data at regular intervals (e.g., every 5 minutes)
+setInterval(loadUsersIntoMemory, 5 * 60 * 1000);  // Refresh every 5 minutes
+
+// Search user by username from memory
+export const searchUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.query;
+
+    // Validate input
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    // Search for the user in the cached data (in-memory)
+    const user = userCache.find(user => user.username.toLowerCase() === username.toLowerCase());
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    // Return the user profile
+    res.status(200).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

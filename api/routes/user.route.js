@@ -3,6 +3,7 @@ import {
   test,
   updateUser,
   deleteUser,
+  searchUserByUsername,
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Middleware for verifying token
 
@@ -10,6 +11,8 @@ const router = express.Router();
 
 // Test Route
 router.get('/', test);
+router.get("/search", searchUserByUsername);
+
 
 // Update User Route
 router.post('/update/:id', verifyToken, async (req, res, next) => {

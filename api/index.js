@@ -41,11 +41,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 // API routes
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/pdf", pdfRoutes);
 app.use("/api", updateCsvRoutes);
-
+app.use("/api/users", userRoutes);
 // Catch-all route for serving the client
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
