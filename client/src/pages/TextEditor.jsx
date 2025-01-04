@@ -385,91 +385,96 @@ const handlePost = async () => {
 
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-3xl font-semibold text-center mb-6">Banglish to Bangla Text Editor</h2>
+    <div className="p-8 bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen">
+  <h2 className="text-4xl font-bold text-center text-blue-800 mb-6">
+    Banglish to Bangla Editor
+  </h2>
+  <p className="text-center text-gray-600 text-lg mb-10">
+    Easily translate Banglish to Bangla, save PDFs, and manage your content.
+  </p>
 
-      <div className="mb-4">
-        <textarea
-          placeholder="Type Banglish text here..."
-          value={banglishText}
-          onChange={(e) => setBanglishText(e.target.value)}
-          className="w-full h-28 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          style={{ fontFamily: fontFamily, fontSize: fontSize }}
-        />
-      </div>
+  <div className="flex justify-center gap-6 mb-8">
+    {/* Input Section */}
+    <div className="flex-1 bg-white shadow-lg rounded-lg p-6">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Banglish Input</h3>
+      <textarea
+        placeholder="Type Banglish text here..."
+        value={banglishText}
+        onChange={(e) => setBanglishText(e.target.value)}
+        className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 text-gray-700"
+        style={{ fontFamily: fontFamily, fontSize: fontSize }}
+      />
+    </div>
 
-      <div className="flex justify-between mb-4">
-        <button
-          onClick={handleTranslate}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Translate
-        </button>
-        <button
-          onClick={handleVoiceInput}
-          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
-        >
-          Voice Input
-        </button>
+    {/* Output Section */}
+    <div className="flex-1 bg-white shadow-lg rounded-lg p-6">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Bangla Output</h3>
+      <textarea
+        placeholder="Translated Bangla text will appear here..."
+        value={banglaText}
+        readOnly
+        className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:outline-none text-gray-700"
+        style={{ fontFamily: fontFamily, fontSize: fontSize }}
+      />
+    </div>
+  </div>
 
-      </div>
+  <div className="flex justify-center gap-4 mb-10">
+    <button
+      onClick={handleTranslate}
+      className="px-6 py-3 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+    >
+      Translate
+    </button>
+    <button
+      onClick={handleVoiceInput}
+      className="px-6 py-3 bg-green-500 text-white font-medium rounded-lg shadow-md hover:bg-green-600 transition focus:outline-none focus:ring-4 focus:ring-green-300"
+    >
+      🎤 Voice Input
+    </button>
+    <button
+      onClick={handlePost}
+      className="px-6 py-3 bg-purple-500 text-white font-medium rounded-lg shadow-md hover:bg-purple-600 transition focus:outline-none focus:ring-4 focus:ring-purple-300"
+    >
+      📥 Save & Download PDF
+    </button>
+    <button
+      onClick={handleHearText}
+      className="px-6 py-3 bg-teal-500 text-white font-medium rounded-lg shadow-md hover:bg-teal-600 transition focus:outline-none focus:ring-4 focus:ring-teal-300"
+    >
+      🔊 Hear
+    </button>
+  </div>
 
-      <div className="mb-4">
-        <textarea
-          placeholder="Translated Bangla text will appear here..."
-          value={banglaText}
-          readOnly
-          className="w-full h-28 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none"
-          style={{ fontFamily: fontFamily, fontSize: fontSize }}
-        />
-      </div>
-
-      <div className="flex justify-between mb-6">
-        <button
-          onClick={handlePost}
-          className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400"
-        >
-          Download PDF
-        </button>
-        <button
-          onClick={handleHearText}
-          className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-400"
-        >
-          Hear
-        </button>
-      </div>
-
-      <div className="flex flex-col space-y-3 mb-4">
-        <div className="flex items-center space-x-3">
-  <label className="text-lg">Change Font Size: </label>
-  <input
-    type="number"
-    value={parseInt(fontSize)}
-    onChange={(e) => setFontSize(e.target.value + "px")}
-    min="10"
-    max="30"
-    className="w-24 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
+  <div className="bg-white shadow-lg rounded-lg p-6 space-y-6">
+    <h3 className="text-xl font-semibold text-gray-800">Font Settings</h3>
+    <div className="flex items-center justify-between">
+      <label className="text-lg font-medium text-gray-700">Font Size:</label>
+      <input
+        type="number"
+        value={parseInt(fontSize)}
+        onChange={(e) => setFontSize(e.target.value + "px")}
+        min="10"
+        max="30"
+        className="w-20 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 text-gray-700"
+      />
+    </div>
+    <div className="flex items-center justify-between">
+      <label className="text-lg font-medium text-gray-700">Font Family:</label>
+      <select
+        onChange={(e) => setFontFamily(e.target.value)}
+        value={fontFamily}
+        className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 text-gray-700"
+      >
+        <option value="Arial">Arial</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+    </div>
+  </div>
 </div>
 
-        <div className="flex items-center space-x-3">
-          <label className="text-lg">Font Family: </label>
-          <select
-            onChange={(e) => setFontFamily(e.target.value)}
-            value={fontFamily}
-            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="Arial">Arial</option>
-            <option value="Verdana">Verdana</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Courier New">Courier New</option>
-          </select>
-        </div>
-      </div>
-
-
-
-    </div>
   );
 };
 

@@ -9,6 +9,21 @@ const FloatingChatbot = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatEndRef = useRef(null);
 
+  const handleVoiceInput = () => {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-UK"; // Adjust for language as needed
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const speechToText = event.results[0][0].transcript;
+      setInputText(speechToText); // Set the recognized text into the input box
+    };
+
+    recognition.onerror = (event) => {
+      alert("Error with speech recognition!");
+    };
+  };
+
   const groq = new Groq({
     apiKey: import.meta.env.VITE_GROQ_API_KEY,
     dangerouslyAllowBrowser: true,
@@ -68,7 +83,6 @@ const FloatingChatbot = () => {
 
   return (
     <>
-      {/* Floating Chatbot Button */}
       {!isChatOpen && (
         <button
           className="fixed bottom-4 right-4 bg-gradient-to-r from-[#002a62] to-[#00509e] text-white rounded-full w-14 h-14 shadow-lg flex items-center justify-center hover:scale-105 transition-all duration-300 z-50 overflow-hidden"
@@ -81,13 +95,10 @@ const FloatingChatbot = () => {
           />
         </button>
       )}
-      {/* Chatbot Popup */}
       {isChatOpen && (
         <div className="fixed bottom-8 right-8 w-80 h-[28rem] bg-white rounded-lg shadow-xl flex flex-col z-50 border border-gray-200">
-          {/* Chat Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-[#002a62] to-[#00509e] text-white p-3 rounded-t-lg">
             <div className="flex items-center">
-
               <div>
                 <h1 className="text-lg font-bold">Blingo</h1>
                 <p className="text-xs text-gray-200">
@@ -102,8 +113,13 @@ const FloatingChatbot = () => {
               ✖
             </button>
           </div>
+          <button
+            onClick={handleVoiceInput}
+            className="px-6 py-3 bg-transparent text-blue font-medium rounded-lg shadow-md  transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+          >
+            🎤 Voice Input
+          </button>
 
-          {/* Chat History */}
           <div className="flex-1 overflow-y-auto bg-gray-50 p-3">
             {conversation.map((message, index) => (
               <div
@@ -124,7 +140,6 @@ const FloatingChatbot = () => {
             <div ref={chatEndRef}></div>
           </div>
 
-          {/* Chat Input */}
           <form onSubmit={handleSubmit} className="p-3 bg-gray-100 border-t">
             <textarea
               value={inputText}

@@ -10,8 +10,17 @@ import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import FloatingChatbot from "./components/Chatbot";
 import Dashboard from "./pages/Dashboard";
-import Search from "./pages/SearchUser";
-export default function App() {
+import Search from "./pages/search";
+import SearchUser from "./pages/SearchPDF";
+import SearchPdf from "./pages/SearchUser";
+
+function AppContent() {
+  const location = useLocation();
+
+  // Define the routes where the Header, Footer, and Chatbot should not appear
+  const hideSharedComponents =
+    location.pathname === "/sign-in" || location.pathname === "/sign-up";
+
   return (
     <>
       {/* Conditionally Render Shared Components */}
@@ -32,6 +41,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/search" element={<Search />} />
           <Route path="/searchuser" element={<SearchUser />} />
+          <Route path="/searchpdf" element={<SearchPdf />} />
         </Route>
       </Routes>
 

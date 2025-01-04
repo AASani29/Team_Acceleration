@@ -21,10 +21,10 @@ export default function Header() {
             <ul className="flex space-x-6 text-lg font-semibold">
               <li>
                 <Link
-                  to="/"
+                  to="/search"
                   className="text-[#002a62] hover:text-blue-600 transition duration-300"
                 >
-                  Home
+                  Search
                 </Link>
               </li>
               <li>

@@ -60,7 +60,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-700">Words Translated</h3>
-              <p className="text-2xl font-bold text-teal-600">10,245</p>
+              <p className="text-2xl font-bold text-teal-600">105</p>
             </div>
           </div>
 
@@ -71,7 +71,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-700">Stories Written</h3>
-              <p className="text-2xl font-bold text-purple-600">125</p>
+              <p className="text-2xl font-bold text-purple-600">15</p>
             </div>
           </div>
 
@@ -82,20 +82,11 @@ const Dashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-700">Chatbot Interactions</h3>
-              <p className="text-2xl font-bold text-blue-600">3,500</p>
+              <p className="text-2xl font-bold text-blue-600">14</p>
             </div>
           </div>
 
-          {/* User Engagement Card */}
-          <div className="bg-white shadow-lg rounded-lg p-6 flex items-center">
-            <div className="mr-4 p-4 bg-orange-600 text-white rounded-full">
-              <FaUsers size={30} />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">User Engagement</h3>
-              <p className="text-2xl font-bold text-orange-600">5,000</p>
-            </div>
-          </div>
+          
         </div>
 
         {/* Line Chart Section */}

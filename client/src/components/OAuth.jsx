@@ -33,12 +33,18 @@ export default function OAuth() {
     }
   };
   return (
-    <button
-      type="button"
-      onClick={handleGoogleClick}
-      className="bg-fuchsia-900 text-white rounded-lg p-3 uppercase hover:opacity-90"
+    <button className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-600 py-2 rounded-lg shadow-sm hover:bg-gray-100 transition"
+    onClick={handleGoogleClick}
     >
-      Continue with google
-    </button>
+          <img
+            src="/Google.png"
+            alt="Google"
+            
+            
+            className="w-5 h-5 mr-2"
+          />
+          Sign in with Google
+        </button>
+    
   );
 }
