@@ -14,6 +14,9 @@ const TextEditor = () => {
   const [pdfCaption, setPdfCaption] = useState('');
   const [postTitle, setPostTitle] = useState('');
   const [postCaption, setPostCaption] = useState('');
+  const [content, setContent] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const ws = useRef(null);
 
   const groq = new Groq({
     apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -156,136 +159,7 @@ const TextEditor = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  //  const handlePost = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const aiResponse = await groq.chat.completions.create({
-  //       model: "llama-3.3-70b-versatile",
-  //       temperature: 0.7,
-  //       max_tokens: 200,
-  //       messages: [
-  //         {
-  //           role: "system",
-  //           content: You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.,
-  //         },
-  //         {
-  //           role: "user",
-  //           content: Generate a title and caption for this content: ${banglishText},
-  //         },
-  //       ],
-  //     });
-
-  //     const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
-  //     const [title, caption] = aiResponseContent.split("\n");
-
-  //     setPostTitle(title);
-  //     setPostCaption(caption);
-
-  //     // Generate the translated Bangla content (this must be handled separately)
-  //     const banglaTranslation = banglaText; // Replace this with your Bangla text
-
-  //     // Create the PDF and format text properly
-  //     const pdf = new jsPDF();
-  //     const pageWidth = pdf.internal.pageSize.getWidth();
-  //     const margin = 10;
-  //     const maxWidth = pageWidth - margin * 2;
-
-  //     pdf.setFontSize(20);
-  //     pdf.text(title, margin, 30, { maxWidth });
-  //     pdf.setFontSize(12);
-  //     pdf.text(caption, margin, 50, { maxWidth });
-
-  //     // Add the Bangla content
-  //     pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
-  //     pdf.setFontSize(14);
-  //     pdf.text(banglaTranslation, margin, 70, { maxWidth });
-
-  //     const fileName = ${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf;
-  //     pdf.save(fileName);
-
-  //     alert(Post generated! Title: ${title}, Caption: ${caption});
-  //   } catch (error) {
-  //     console.error("Error generating post:", error);
-  //     alert("Failed to generate post!");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-//   const handlePost = async () => {
-//   setLoading(true);
-//   try {
-//     const aiResponse = await groq.chat.completions.create({
-//       model: "llama-3.3-70b-versatile",
-//       temperature: 0.7,
-//       max_tokens: 200,
-//       messages: [
-//         {
-//           role: "system",
-//           content: You are a content assistant. Your task is to generate a short title and caption for a post. The title should be engaging and summarize the content succinctly. Respond only with the title and caption.,
-//         },
-//         {
-//           role: "user",
-//           content: Generate a title and caption for this content: ${banglishText},
-//         },
-//       ],
-//     });
-
-//     const aiResponseContent = aiResponse.choices[0]?.message?.content || "No response from AI.";
-//     const [title, caption] = aiResponseContent.split("\n");
-
-//     setPostTitle(title);
-//     setPostCaption(caption);
-
-//     // Generate the translated Bangla content (this must be handled separately)
-//     const banglaTranslation = banglaText;
-
-//     // Create the PDF and format text properly
-//     const pdf = new jsPDF();
-//     const pageWidth = pdf.internal.pageSize.getWidth();
-//     const margin = 10;
-//     const maxWidth = pageWidth - margin * 2;
-
-//     pdf.setFontSize(20);
-//     pdf.text(title, margin, 30, { maxWidth });
-//     pdf.setFontSize(12);
-//     pdf.text(caption, margin, 50, { maxWidth });
-
-//     // Add the Bangla content
-//     pdf.setFont("Helvetica"); // Adjust font if necessary for Bangla text rendering
-//     pdf.setFontSize(14);
-//     pdf.text(banglaTranslation, margin, 70, { maxWidth });
-
-//     // Generate the PDF as a Blob
-//     const pdfBlob = pdf.output('blob');
-//     const formData = new FormData();
-//     formData.append('pdf', pdfBlob, ${title.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_")}.pdf);
-//     formData.append('title', title);
-//     formData.append('caption', caption);
-//     formData.append('banglishText', banglishText);  // Send the Banglish input
-//     formData.append('banglaText', banglaTranslation);  // Send the translated Bangla output
-
-//     // Send the form data to the backend
-//     const response = await fetch('/api/pdf/upload', {
-//       method: 'POST',
-//       body: formData,
-//       credentials: "include",
-//     });
-
-//     if (response.ok) {
-//       alert('PDF uploaded successfully!');
-//     } else {
-//       alert('Failed to upload PDF');
-//     }
-
-//     alert(Post generated! Title: ${title}, Caption: ${caption});
-//   } catch (error) {
-//     console.error("Error generating post:", error);
-//     alert("Failed to generate post!");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+  
 
 
 const handlePost = async () => {
@@ -375,12 +249,63 @@ const handlePost = async () => {
 
  
  
+useEffect(() => {
+    ws.current = new WebSocket("ws://localhost:3000"); // Replace with your WebSocket server URL
+
+    // Handle incoming messages
+    ws.current.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "update") {
+          setBanglishText(message.data); // Update the local state with the collaborative data
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+
+    ws.current.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.current.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
+
+  const handleContentChange = (event) => {
+    const updatedContent = event.target.value;
+    setContent(updatedContent);
+
+    // Broadcast updates to the server
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(
+        JSON.stringify({
+          type: 'update',
+          data: updatedContent,
+        })
+      );
+    }
+  };
 
 
+const handleChange = (e) => {
+    const newText = e.target.value;
+    setBanglishText(newText);
 
-
-
-
+    // Broadcast the change to all connected clients
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(
+        JSON.stringify({ type: "update", data: newText }) // Send the updated text
+      );
+    }
+  };
 
 
 
@@ -400,7 +325,7 @@ const handlePost = async () => {
       <textarea
         placeholder="Type Banglish text here..."
         value={banglishText}
-        onChange={(e) => setBanglishText(e.target.value)}
+        onChange={handleChange}
         className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 text-gray-700"
         style={{ fontFamily: fontFamily, fontSize: fontSize }}
       />

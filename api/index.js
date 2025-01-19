@@ -6,10 +6,8 @@ import authRoutes from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import pdfRoutes from './routes/pdf.route.js';
-
-
-import updateCsvRoutes from "./routes/csv.js"; 
-
+import updateCsvRoutes from "./routes/csv.js";
+import { WebSocketServer } from 'ws'; // Import WebSocket server
 
 // Load environment variables
 dotenv.config();
@@ -35,7 +33,6 @@ mongoose
   });
 
 // Middleware
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
@@ -46,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use("/api/pdf", pdfRoutes);
 app.use("/api", updateCsvRoutes);
 app.use("/api/users", userRoutes);
+
 // Catch-all route for serving the client
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
@@ -62,13 +60,42 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-
-// Start the server
+// Start the HTTP server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
+// WebSocket server setup for collaborative text editor
+const wss = new WebSocketServer({ server }); // Attach WebSocket server to HTTP server
+let document = ''; // Shared document state
 
+wss.on('connection', (ws) => {
+  console.log('New client connected');
 
+  // Send the current document state to the new client
+  ws.send(JSON.stringify({ type: 'init', data: document }));
+
+  ws.on('message', (message) => {
+    try {
+      const parsedMessage = JSON.parse(message);
+
+      if (parsedMessage.type === 'update') {
+        document = parsedMessage.data;
+
+        // Broadcast the update to all connected clients
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'update', data: document }));
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing message:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
