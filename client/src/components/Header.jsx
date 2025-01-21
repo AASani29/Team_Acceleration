@@ -10,7 +10,7 @@ export default function Header() {
       <div className="container mx-auto px-4 flex justify-between items-center py-2">
         {/* Logo Section */}
         <div className="flex items-center">
-          <Link to="/">
+          <Link to="/editor">
             <img src="/Blingo.png" alt="Logo" width={120} height={60} />
           </Link>
         </div>
@@ -26,31 +26,7 @@ export default function Header() {
                 >
                   Search
                 </Link>
-              </li>
-              <li>
-                <Link
-                  to="/chatbot"
-                  className="text-[#002a62] hover:text-blue-600 transition duration-300"
-                >
-                  Chatbot
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/editor"
-                  className="text-[#002a62] hover:text-blue-600 transition duration-300"
-                >
-                  Editor
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/admin/dashboard"
-                  className="text-[#002a62] hover:text-blue-600 transition duration-300"
-                >
-                  Dashboard
-                </Link>
-              </li>
+              </li>                       
             </ul>
           </nav>
 

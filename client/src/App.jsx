@@ -29,7 +29,7 @@ function AppContent() {
       {/* Application Routes */}
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<TextEditor />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
 
