@@ -182,15 +182,20 @@ export default function Profile() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <a
-                        href={pdf.filePath}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-900 font-medium hover:text-purple-600 transition-colors truncate group flex items-center"
+                      <button
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = pdf.filePath;
+                          link.download = pdf.title || 'document.pdf';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        className="text-gray-900 font-medium hover:text-purple-600 transition-colors truncate group flex items-center text-left"
                       >
                         {pdf.title}
                         <ExternalLink className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                      </a>
+                      </button>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit ${
                           pdf.isPublic ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"

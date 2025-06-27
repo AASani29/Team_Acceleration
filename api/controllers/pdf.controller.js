@@ -13,12 +13,17 @@ cloudinary.config({
 // Controller to upload a PDF
 export const uploadPDF = async (req, res) => {
   try {
-    const { title, caption, banglishText, banglaText } = req.body;
+    const { title, caption, banglishText, englishText, banglaText } = req.body;
     const file = req.file; // The file sent from the frontend
 
     // Ensure we have all the required data
-    if (!file || !title || !caption || !banglishText || !banglaText) {
-      return res.status(400).json({ message: "All fields are required." });
+    if (!file || !title || !caption || !banglaText) {
+      return res.status(400).json({ message: "PDF file, title, caption, and Bangla text are required." });
+    }
+
+    // Validate that at least one source text (banglishText or englishText) is provided
+    if (!banglishText && !englishText) {
+      return res.status(400).json({ message: "Either Banglish text or English text is required." });
     }
 
     // Ensure the userId is available from the token (passed via middleware)
@@ -26,12 +31,14 @@ export const uploadPDF = async (req, res) => {
       return res.status(401).json({ message: "User not authenticated." });
     }
 
+    console.log("Uploading PDF to Cloudinary...");
     // Upload the PDF to Cloudinary
     const result = await cloudinary.uploader.upload(file.path, {
       resource_type: "raw", // Use "raw" for non-image files like PDFs
       folder: "pdfs",
     });
 
+    console.log("Cloudinary upload successful:", result.secure_url);
     // Remove the local file after upload (the file is stored temporarily in 'uploads' folder)
     await fs.unlink(file.path);
 
@@ -42,11 +49,14 @@ export const uploadPDF = async (req, res) => {
       filePath: result.secure_url, // Store the Cloudinary URL
       isPublic: false, // Default visibility is private
       userId: req.user.id, // Add the user ID from the token
-      banglishText, // Store the Banglish input text
+      banglishText: banglishText || '', // Store the Banglish input text (can be empty)
+      englishText: englishText || '', // Store the English input text (can be empty)
       banglaText, // Store the translated Bangla output text
     });
 
+    console.log("Saving PDF to database...");
     await newPDF.save();
+    console.log("PDF saved successfully");
 
     res.status(201).json({ message: "PDF uploaded successfully.", pdf: newPDF });
   } catch (error) {

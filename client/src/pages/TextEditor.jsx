@@ -142,6 +142,11 @@ const CollaborativeStoryEditor = () => {
 
   const handleDownloadPDF = async () => {
     try {
+      // Generate Bengali title and caption if not already set
+      if (!pdfTitle || !pdfCaption) {
+        await generateCaption(banglaText);
+      }
+
       // Create a temporary div element with proper styling for Bangla text
       const tempDiv = document.createElement('div');
       tempDiv.style.cssText = `
@@ -177,10 +182,12 @@ const CollaborativeStoryEditor = () => {
 
       // Generate canvas from the div
       const canvas = await html2canvas(tempDiv, {
-        scale: 2,
+        scale: 1.5, // Reduced for better performance and smaller file size
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        quality: 0.8, // Add quality setting
+        logging: false, // Disable logging
         width: tempDiv.offsetWidth,
         height: tempDiv.offsetHeight
       });
@@ -192,10 +199,11 @@ const CollaborativeStoryEditor = () => {
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true // Enable compression
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.7); // Use JPEG with 70% quality
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -204,14 +212,14 @@ const CollaborativeStoryEditor = () => {
       let position = 0;
 
       // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
       heightLeft -= pageHeight;
 
       // Add additional pages if content is longer than one page
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
         heightLeft -= pageHeight;
       }
 
@@ -342,81 +350,103 @@ const CollaborativeStoryEditor = () => {
 
       // PDF creation/upload logic with proper Bangla text support
       const createPDFBlob = async () => {
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = `
-          position: fixed;
-          top: -9999px;
-          left: -9999px;
-          width: 210mm;
-          min-height: 297mm;
-          padding: 20mm;
-          background: white;
-          font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
-          font-size: 16px;
-          line-height: 1.6;
-          color: black;
-          box-sizing: border-box;
-        `;
+        try {
+          console.log("Creating PDF with title:", postTitle);
+          console.log("Creating PDF with caption:", postCaption);
+          console.log("Creating PDF with bangla text length:", banglaText.length);
+          
+          const tempDiv = document.createElement('div');
+          tempDiv.style.cssText = `
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            background: white;
+            font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: black;
+            box-sizing: border-box;
+          `;
 
-        const content = `
-          <div style="margin-bottom: 30px;">
-            <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
-              ${postTitle || 'বাংলা লেখা'}
-            </h1>
-            ${postCaption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${postCaption}</p>` : ''}
-          </div>
-          <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
-            ${banglaText}
-          </div>
-        `;
+          const content = `
+            <div style="margin-bottom: 30px;">
+              <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+                ${postTitle || 'বাংলা লেখা'}
+              </h1>
+              ${postCaption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${postCaption}</p>` : ''}
+            </div>
+            <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+              ${banglaText}
+            </div>
+          `;
 
-        tempDiv.innerHTML = content;
-        document.body.appendChild(tempDiv);
+          tempDiv.innerHTML = content;
+          document.body.appendChild(tempDiv);
 
-        const canvas = await html2canvas(tempDiv, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff'
-        });
+          console.log("Generating canvas...");
+          const canvas = await html2canvas(tempDiv, {
+            scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            quality: 0.8, // Add quality setting to reduce file size
+            logging: false, // Disable logging for performance
+          });
 
-        document.body.removeChild(tempDiv);
+          document.body.removeChild(tempDiv);
+          console.log("Canvas generated successfully");
 
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+            compress: true // Enable PDF compression
+          });
 
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 210;
-        const pageHeight = 297;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
+          const imgData = canvas.toDataURL('image/jpeg', 0.7); // Use JPEG with 70% quality instead of PNG
+          const imgWidth = 210;
+          const pageHeight = 297;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          let heightLeft = imgHeight;
+          let position = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM'); // Use MEDIUM compression
           heightLeft -= pageHeight;
-        }
 
-        return pdf.output("blob");
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+            heightLeft -= pageHeight;
+          }
+
+          const blob = pdf.output("blob");
+          console.log("PDF blob created successfully, size:", blob.size);
+          return blob;
+        } catch (error) {
+          console.error("Error creating PDF blob:", error);
+          throw error;
+        }
       };
 
       const pdfBlob = await createPDFBlob();
 
+      console.log("Preparing form data...");
       const formData = new FormData();
-      formData.append("pdf", pdfBlob);
+      formData.append("pdf", pdfBlob, "translated_text.pdf");
       formData.append("title", postTitle);
       formData.append("caption", postCaption);
       formData.append("banglishText", activeLanguage === 'banglish' ? banglishText : '');
       formData.append("englishText", activeLanguage === 'english' ? englishText : '');
       formData.append("banglaText", banglaText);
+
+      console.log("Form data prepared, making request to /api/pdf/upload");
+      console.log("Title:", postTitle);
+      console.log("Caption:", postCaption);
+      console.log("PDF blob size:", pdfBlob.size);
 
       const response = await fetch("/api/pdf/upload", {
         method: "POST",
@@ -425,12 +455,21 @@ const CollaborativeStoryEditor = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         alert("Story saved and PDF uploaded successfully!");
+        console.log("Upload successful:", result);
       } else {
-        alert("Failed to upload PDF");
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        console.error("Upload failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        alert(`Failed to upload PDF: ${errorData.message || response.statusText}`);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error in handleSaveStory:", error);
+      alert(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
