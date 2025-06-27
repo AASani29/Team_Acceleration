@@ -3,9 +3,9 @@ import { Github, Linkedin, Twitter } from "lucide-react";
 
 const Footer = () => {
   const developers = [
-    { name: "Ahmed Alfey Sani", github: "https://github.com/AASani29", linkedin: "" },
-    { name: "MD HR Alif", github: "https://github.com/mdhralif", linkedin: "" },
-    { name: "Niaz Rahman", github: "https://github.com/niazbuoy08", linkedin: "#" }
+    { name: "Ahmed Alfey Sani", github: "https://github.com/AASani29", linkedin: "https://www.linkedin.com/in/ahmed-alfey-sani/" },
+    { name: "MD HR Alif", github: "https://github.com/mdhralif", linkedin: "https://www.linkedin.com/in/md-h-r-alif-7358801a6/" },
+    { name: "Niaz Rahman", github: "https://github.com/niazbuoy08", linkedin: "https://www.linkedin.com/in/niazman" }
   ];
 
   return (
