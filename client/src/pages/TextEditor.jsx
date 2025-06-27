@@ -68,38 +68,44 @@ const CollaborativeStoryEditor = () => {
     };
   }, []);
 
-  const handleTranslate = async () => {
-    setLoading(true);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if ((activeLanguage === 'banglish' && banglishText) || 
+          (activeLanguage === 'english' && englishText)) {
+        const textToTranslate = activeLanguage === 'banglish' ? banglishText : englishText;
+        if (textToTranslate.trim().length > 0) {
+          setLoading(true);
+          const translatedText = await translateText(textToTranslate, activeLanguage);
+          setBanglaText(translatedText);
+          generateCaption(translatedText);
+          setLoading(false);
+        }
+      }
+    }, 1500); // 1.5 second delay after typing stops
+  
+    return () => clearTimeout(delayDebounceFn);
+  }, [banglishText, englishText, activeLanguage]);
+
+  const translateText = async (text, language) => {
     try {
-      const textToTranslate = activeLanguage === 'banglish' ? banglishText : englishText;
-      const systemPrompt = activeLanguage === 'banglish' 
+      const systemPrompt = language === 'banglish' 
         ? "You are a language model that translates Banglish (Romanized Bangla) into proper Bangla."
         : "You are a language model that translates English into proper Bangla.";
-
+  
       const chatCompletion = await groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         temperature: 0.7,
         max_tokens: 200,
         messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: `Translate this text into Bangla: ${textToTranslate}`,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Translate this text into Bangla: ${text}` },
         ],
       });
-
-      const aiResponse = chatCompletion.choices[0]?.message?.content || "No response from AI.";
-      setBanglaText(aiResponse);
-      generateCaption(aiResponse);
+  
+      return chatCompletion.choices[0]?.message?.content || "No response from AI.";
     } catch (error) {
-      console.error("Error fetching translation:", error);
-      alert("Translation failed!");
-    } finally {
-      setLoading(false);
+      console.error("Translation error:", error);
+      return "Translation failed";
     }
   };
 
@@ -695,14 +701,14 @@ const CollaborativeStoryEditor = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              <button
+              {/* <button
                 onClick={handleTranslate}
                 disabled={loading || (!banglishText && !englishText)}
                 className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>{loading ? 'Translating...' : 'Translate'}</span>
-              </button>
+              </button> */}
               
               <button
                 onClick={handleSaveStory}
