@@ -19,16 +19,7 @@ const CardLayout = () => {
       </div> */}
 
       <div className="relative z-10 w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-lg">
-            <Search className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-            Search Hub
-          </h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">Choose your search type to discover content</p>
-        </div>
+      
 
         {/* Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -82,9 +73,7 @@ const CardLayout = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm">Choose your search type to get started</p>
-        </div>
+        
       </div>
 
       <style jsx>{`
