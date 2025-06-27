@@ -4,6 +4,8 @@ import { useRef, useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { deleteUserStart, deleteUserSuccess, deleteUserFailure, signOut } from "../redux/user/userSlice"
 import Dashboard from "./Dashboard"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
 import {
   Camera,
   FileText,
@@ -24,16 +26,11 @@ import {
 export default function Profile() {
   const dispatch = useDispatch()
   const fileRef = useRef(null)
-  const coverRef = useRef(null)
   const [image, setImage] = useState(undefined)
-  const [coverImage, setCoverImage] = useState(undefined)
-  const [imagePercent, setImagePercent] = useState(0)
-  const [coverPercent, setCoverPercent] = useState(0)
-  const [imageError, setImageError] = useState(false)
   const [formData, setFormData] = useState({})
   const [tab, setTab] = useState("pdfs")
   const [userPDFs, setUserPDFs] = useState([])
-  const { currentUser, loading, error } = useSelector((state) => state.user)
+  const { currentUser } = useSelector((state) => state.user)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -48,6 +45,7 @@ export default function Profile() {
       })
       if (response.ok) {
         const pdfs = await response.json()
+        console.log('Fetched PDFs:', pdfs); // Debug log
         setUserPDFs(pdfs)
       } else {
         const errorData = await response.json()
@@ -129,6 +127,110 @@ export default function Profile() {
     }
   }
 
+  const handleDownloadPDF = async (pdf) => {
+    try {
+      // Debug: Log the PDF object to see what data we have
+      console.log('PDF object:', pdf);
+      console.log('banglaText value:', pdf.banglaText);
+      console.log('banglaText type:', typeof pdf.banglaText);
+      
+      // Create a temporary div element with proper styling for Bangla text
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm;
+        background: white;
+        font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: black;
+        box-sizing: border-box;
+      `;
+
+      // Check if banglaText exists and is valid
+      let banglaContent;
+      
+      if (!pdf.banglaText || 
+          pdf.banglaText === 'undefined' || 
+          pdf.banglaText.trim() === '' || 
+          pdf.banglaText === null) {
+        banglaContent = 'বাংলা অনুবাদ পাওয়া যায়নি। দয়া করে আবার চেষ্টা করুন।';
+        console.log('Using fallback text because banglaText is:', pdf.banglaText);
+      } else {
+        banglaContent = pdf.banglaText;
+        console.log('Using actual banglaText:', banglaContent.substring(0, 50) + '...');
+      }
+
+      // Create content with proper Bangla text rendering
+      const content = `
+        <div style="margin-bottom: 30px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+            ${pdf.title || 'বাংলা লেখা'}
+          </h1>
+          ${pdf.caption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${pdf.caption}</p>` : ''}
+        </div>
+        <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+          ${banglaContent}
+        </div>
+      `;
+
+      tempDiv.innerHTML = content;
+      document.body.appendChild(tempDiv);
+
+      // Generate canvas from the div
+      const canvas = await html2canvas(tempDiv, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        quality: 0.8,
+        logging: false,
+        width: tempDiv.offsetWidth,
+        height: tempDiv.offsetHeight
+      });
+
+      // Remove the temporary div
+      document.body.removeChild(tempDiv);
+
+      // Create PDF
+      const pdfDoc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.7);
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add first page
+      pdfDoc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+      heightLeft -= pageHeight;
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdfDoc.addPage();
+        pdfDoc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+        heightLeft -= pageHeight;
+      }
+
+      pdfDoc.save(`${pdf.title || 'bangla_story'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  }
+
   const publicPDFs = userPDFs.filter((pdf) => pdf.isPublic).length
   const privatePDFs = userPDFs.filter((pdf) => !pdf.isPublic).length
 
@@ -183,14 +285,7 @@ export default function Profile() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
                       <button
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = pdf.filePath;
-                          link.download = pdf.title || 'document.pdf';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
+                        onClick={() => handleDownloadPDF(pdf)}
                         className="text-gray-900 font-medium hover:text-purple-600 transition-colors truncate group flex items-center text-left"
                       >
                         {pdf.title}
