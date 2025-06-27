@@ -11,7 +11,7 @@ Secure user login and registration, along with protected API endpoints for a saf
 ![Authentication](Images/Login.png)
 
 ### **Banglish to Bangla Collaborative Story Editor**
-A high-accuracy translation system that converts Banglish story into Bangla story seamlessly. He Multiple users can collaborate and work.
+A high-accuracy translation system that converts Banglish story into Bangla story seamlessly. Here multiple users can collaborate and work.
 ![Banglish to Bangla Conversion story Editor](Images/Collaborative_Story_Editor.png)
 
 ### **Content Management**
