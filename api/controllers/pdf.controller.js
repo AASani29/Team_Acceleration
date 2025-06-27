@@ -13,7 +13,7 @@ cloudinary.config({
 // Controller to upload a PDF
 export const uploadPDF = async (req, res) => {
   try {
-    const { title, caption, banglishText, englishText, banglaText } = req.body;
+    const { title, caption, banglishText, banglaText } = req.body;
     const file = req.file; // The file sent from the frontend
 
     // Ensure we have all the required data
@@ -21,9 +21,9 @@ export const uploadPDF = async (req, res) => {
       return res.status(400).json({ message: "PDF file, title, caption, and Bangla text are required." });
     }
 
-    // Validate that at least one source text (banglishText or englishText) is provided
-    if (!banglishText && !englishText) {
-      return res.status(400).json({ message: "Either Banglish text or English text is required." });
+    // Validate that banglishText is provided
+    if (!banglishText) {
+      return res.status(400).json({ message: "Banglish text is required." });
     }
 
     // Ensure the userId is available from the token (passed via middleware)
@@ -49,8 +49,7 @@ export const uploadPDF = async (req, res) => {
       filePath: result.secure_url, // Store the Cloudinary URL
       isPublic: false, // Default visibility is private
       userId: req.user.id, // Add the user ID from the token
-      banglishText: banglishText || '', // Store the Banglish input text (can be empty)
-      englishText: englishText || '', // Store the English input text (can be empty)
+      banglishText, // Store the Banglish input text
       banglaText, // Store the translated Bangla output text
     });
 
@@ -86,18 +85,18 @@ export const uploadPDF = async (req, res) => {
   }
 };
 
-// Controller to fetch PDFs for the logged-in user (only title, caption, and filePath)
+// Controller to fetch PDFs for the logged-in user (including text fields for download functionality)
 export const getUserPDFs = async (req, res) => {
   try {
-    // Fetch PDFs with only the selected fields (title, caption, filePath) where userId matches the logged-in user's ID
-    const userPDFs = await PDF.find({ userId: req.user.id }).select('title caption filePath');
+    // Fetch PDFs with all necessary fields for proper download functionality
+    const userPDFs = await PDF.find({ userId: req.user.id }).select('title caption filePath banglaText banglishText isPublic');
 
     if (userPDFs.length === 0) {
       return res.status(404).json({ message: "No PDFs found for this user." });
     }
 
-    // Return the PDFs with the required fields
-    res.status(200).json(userPDFs); // Send only title, caption, and filePath as a response
+    // Return the PDFs with all required fields including text content
+    res.status(200).json(userPDFs);
   } catch (error) {
     console.error("Error fetching PDFs:", error.message);
     return res.status(500).json({ message: "Internal server error", error: error.message });

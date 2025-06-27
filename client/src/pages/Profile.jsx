@@ -2,8 +2,10 @@
 
 import { useRef, useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
-import { deleteUserStart, deleteUserSuccess, deleteUserFailure, signOut } from "../redux/user/userSlice"
+import { deleteUserStart, deleteUserSuccess, deleteUserFailure, signOut, updateUserStart, updateUserSuccess as updateUserSuccessAction, updateUserFailure } from "../redux/user/userSlice"
 import Dashboard from "./Dashboard"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
 import {
   Camera,
   FileText,
@@ -19,26 +21,91 @@ import {
   Shield,
   Globe,
   Lock,
+  X,
+  Save,
 } from "lucide-react"
 
 export default function Profile() {
   const dispatch = useDispatch()
   const fileRef = useRef(null)
-  const coverRef = useRef(null)
   const [image, setImage] = useState(undefined)
-  const [coverImage, setCoverImage] = useState(undefined)
-  const [imagePercent, setImagePercent] = useState(0)
-  const [coverPercent, setCoverPercent] = useState(0)
-  const [imageError, setImageError] = useState(false)
-  const [formData, setFormData] = useState({})
   const [tab, setTab] = useState("pdfs")
   const [userPDFs, setUserPDFs] = useState([])
-  const { currentUser, loading, error } = useSelector((state) => state.user)
+  const { currentUser, loading } = useSelector((state) => state.user)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [updateFormData, setUpdateFormData] = useState({
+    username: currentUser?.username || '',
+    email: currentUser?.email || '',
+    profilePicture: currentUser?.profilePicture || ''
+  })
+  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null)
+  const [imageFileUploadError, setImageFileUploadError] = useState(null)
+  const [imageFileUploading, setImageFileUploading] = useState(false)
+  const [updateUserSuccess, setUpdateUserSuccess] = useState(null)
+  const [updateUserError, setUpdateUserError] = useState(null)
 
   useEffect(() => {
-    if (currentUser) fetchUserPDFs()
+    if (currentUser) {
+      fetchUserPDFs()
+      // Initialize update form with current user data
+      setUpdateFormData({
+        username: currentUser.username || '',
+        email: currentUser.email || '',
+        profilePicture: currentUser.profilePicture || ''
+      })
+      console.log('Initialized profile picture:', currentUser.profilePicture)
+    }
   }, [currentUser])
+
+  useEffect(() => {
+    if (image) {
+      handleImageUpload(image)
+    }
+  }, [image])
+
+  const handleImageUpload = async (image) => {
+    console.log('Starting image upload for:', image.name)
+    setImageFileUploading(true)
+    setImageFileUploadError(null)
+    setImageFileUploadProgress(0)
+
+    const uploadFormData = new FormData()
+    uploadFormData.append('image', image)
+
+    try {
+      const response = await fetch('/api/user/upload-image', {
+        method: 'POST',
+        body: uploadFormData,
+        credentials: 'include'
+      })
+
+      console.log('Upload response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Upload response data:', data)
+        setUpdateFormData(prev => {
+          const newState = { ...prev, profilePicture: data.imageUrl }
+          console.log('Updated form data:', newState)
+          return newState
+        })
+        setImageFileUploadProgress(100)
+        console.log('Image uploaded successfully:', data.imageUrl)
+      } else {
+        const errorData = await response.json()
+        console.error('Upload failed with status:', response.status, 'Error:', errorData)
+        setImageFileUploadError(errorData.message || 'Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+      console.error('Error stack:', error.stack)
+      setImageFileUploadError('Failed to upload image: ' + error.message)
+    } finally {
+      setImageFileUploading(false)
+      console.log('Image upload process completed')
+    }
+  }
 
   const fetchUserPDFs = async () => {
     try {
@@ -48,6 +115,7 @@ export default function Profile() {
       })
       if (response.ok) {
         const pdfs = await response.json()
+        console.log('Fetched PDFs:', pdfs); // Debug log
         setUserPDFs(pdfs)
       } else {
         const errorData = await response.json()
@@ -63,7 +131,80 @@ export default function Profile() {
   }
 
   const handleUpdate = () => {
-    alert("Update functionality not implemented yet.")
+    setShowUpdateModal(true)
+    setUpdateFormData({
+      username: currentUser.username,
+      email: currentUser.email,
+      profilePicture: currentUser.profilePicture
+    })
+    setUpdateUserSuccess(null)
+    setUpdateUserError(null)
+  }
+
+  const handleUpdateFormChange = (e) => {
+    setUpdateFormData({ ...updateFormData, [e.target.id]: e.target.value })
+  }
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault()
+    setUpdateUserError(null)
+    setUpdateUserSuccess(null)
+
+    if (Object.keys(updateFormData).length === 0) {
+      setUpdateUserError('No changes made')
+      return
+    }
+
+    if (imageFileUploading) {
+      setUpdateUserError('Please wait for image to finish uploading')
+      return
+    }
+
+    try {
+      dispatch(updateUserStart())
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updateFormData),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        dispatch(updateUserFailure(data.message))
+        setUpdateUserError(data.message)
+      } else {
+        dispatch(updateUserSuccessAction(data))
+        setUpdateUserSuccess('User updated successfully')
+        // Update the local form state with the server response
+        setUpdateFormData({
+          username: data.username || currentUser.username,
+          email: data.email || currentUser.email,
+          profilePicture: data.profilePicture || currentUser.profilePicture
+        })
+        setTimeout(() => {
+          setShowUpdateModal(false)
+        }, 2000)
+      }
+    } catch (error) {
+      dispatch(updateUserFailure(error.message))
+      setUpdateUserError(error.message)
+    }
+  }
+
+  const closeUpdateModal = () => {
+    setShowUpdateModal(false)
+    setUpdateFormData({
+      username: currentUser.username || '',
+      email: currentUser.email || '',
+      profilePicture: currentUser.profilePicture || ''
+    })
+    setUpdateUserSuccess(null)
+    setUpdateUserError(null)
+    setImageFileUploadError(null)
+    setImageFileUploadProgress(null)
+    setImage(undefined)
   }
 
   const handleDelete = () => {
@@ -129,6 +270,110 @@ export default function Profile() {
     }
   }
 
+  const handleDownloadPDF = async (pdf) => {
+    try {
+      // Debug: Log the PDF object to see what data we have
+      console.log('PDF object:', pdf);
+      console.log('banglaText value:', pdf.banglaText);
+      console.log('banglaText type:', typeof pdf.banglaText);
+      
+      // Create a temporary div element with proper styling for Bangla text
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm;
+        background: white;
+        font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: black;
+        box-sizing: border-box;
+      `;
+
+      // Check if banglaText exists and is valid
+      let banglaContent;
+      
+      if (!pdf.banglaText || 
+          pdf.banglaText === 'undefined' || 
+          pdf.banglaText.trim() === '' || 
+          pdf.banglaText === null) {
+        banglaContent = 'বাংলা অনুবাদ পাওয়া যায়নি। দয়া করে আবার চেষ্টা করুন।';
+        console.log('Using fallback text because banglaText is:', pdf.banglaText);
+      } else {
+        banglaContent = pdf.banglaText;
+        console.log('Using actual banglaText:', banglaContent.substring(0, 50) + '...');
+      }
+
+      // Create content with proper Bangla text rendering
+      const content = `
+        <div style="margin-bottom: 30px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+            ${pdf.title || 'বাংলা লেখা'}
+          </h1>
+          ${pdf.caption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${pdf.caption}</p>` : ''}
+        </div>
+        <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+          ${banglaContent}
+        </div>
+      `;
+
+      tempDiv.innerHTML = content;
+      document.body.appendChild(tempDiv);
+
+      // Generate canvas from the div
+      const canvas = await html2canvas(tempDiv, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        quality: 0.8,
+        logging: false,
+        width: tempDiv.offsetWidth,
+        height: tempDiv.offsetHeight
+      });
+
+      // Remove the temporary div
+      document.body.removeChild(tempDiv);
+
+      // Create PDF
+      const pdfDoc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.7);
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add first page
+      pdfDoc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+      heightLeft -= pageHeight;
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdfDoc.addPage();
+        pdfDoc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+        heightLeft -= pageHeight;
+      }
+
+      pdfDoc.save(`${pdf.title || 'bangla_story'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  }
+
   const publicPDFs = userPDFs.filter((pdf) => pdf.isPublic).length
   const privatePDFs = userPDFs.filter((pdf) => !pdf.isPublic).length
 
@@ -183,14 +428,7 @@ export default function Profile() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
                       <button
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = pdf.filePath;
-                          link.download = pdf.title || 'document.pdf';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
+                        onClick={() => handleDownloadPDF(pdf)}
                         className="text-gray-900 font-medium hover:text-purple-600 transition-colors truncate group flex items-center text-left"
                       >
                         {pdf.title}
@@ -255,7 +493,7 @@ export default function Profile() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src={formData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
+              src={updateFormData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
               alt="Profile"
               className="w-10 h-10 rounded-full object-cover border-2 border-purple-100"
             />
@@ -288,7 +526,7 @@ export default function Profile() {
                   onChange={(e) => setImage(e.target.files[0])}
                 />
                 <img
-                  src={formData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
+                  src={updateFormData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover cursor-pointer hover:opacity-90 transition-opacity border-4 border-purple-100"
                   onClick={() => fileRef.current.click()}
@@ -376,7 +614,7 @@ export default function Profile() {
                     onChange={(e) => setImage(e.target.files[0])}
                   />
                   <img
-                    src={formData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
+                    src={updateFormData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
                     alt="Profile"
                     className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-90 transition-opacity border-4 border-purple-100"
                     onClick={() => fileRef.current.click()}
@@ -447,6 +685,133 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Update Profile Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Update Profile</h3>
+              <button
+                onClick={closeUpdateModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSubmit} className="space-y-4">
+              {/* Profile Picture */}
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <input
+                    type="file"
+                    ref={fileRef}
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => setImage(e.target.files[0])}
+                  />
+                  <img
+                    src={updateFormData.profilePicture || currentUser.profilePicture || "/placeholder.svg"}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover cursor-pointer hover:opacity-90 transition-opacity border-4 border-purple-100 mx-auto"
+                    onClick={() => fileRef.current?.click()}
+                  />
+                  <div className="absolute -bottom-2 -right-2 bg-purple-500 text-white p-2 rounded-full cursor-pointer hover:bg-purple-600 transition-colors">
+                    <Camera className="h-4 w-4" />
+                  </div>
+                </div>
+                {imageFileUploadProgress && (
+                  <div className="mt-2">
+                    <div className="bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${imageFileUploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{imageFileUploadProgress}% uploaded</p>
+                  </div>
+                )}
+                {imageFileUploadError && (
+                  <p className="text-red-500 text-sm mt-2">{imageFileUploadError}</p>
+                )}
+              </div>
+
+              {/* Username */}
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  value={updateFormData.username || ''}
+                  onChange={handleUpdateFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter your username"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={updateFormData.email || ''}
+                  onChange={handleUpdateFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              {/* Error Messages */}
+              {updateUserError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{updateUserError}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {updateUserSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-600 text-sm">{updateUserSuccess}</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeUpdateModal}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || imageFileUploading}
+                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading || imageFileUploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>Update</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

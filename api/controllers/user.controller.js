@@ -1,6 +1,15 @@
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import bcryptjs from 'bcryptjs';
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dd5d13l0p",
+  api_key: process.env.CLOUDINARY_API_KEY || "394887866187762",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "3R9vwK-zY0twfi-stE3xZtpVzME",
+});
 
 export const test = (req, res) => {
   res.json({
@@ -105,5 +114,43 @@ export const searchUserByUsername = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Upload user profile image
+export const uploadUserImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    console.log('Uploading image to Cloudinary...', req.file.path);
+
+    // Upload the image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'user_profiles',
+      resource_type: 'image',
+    });
+
+    console.log('Cloudinary upload successful:', result.secure_url);
+
+    // Delete the temporary file
+    fs.unlinkSync(req.file.path);
+    
+    res.status(200).json({ 
+      message: 'Image uploaded successfully',
+      imageUrl: result.secure_url 
+    });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    // Clean up the temporary file if it exists
+    if (req.file && req.file.path) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        console.error('Error deleting temporary file:', unlinkError);
+      }
+    }
+    next(error);
   }
 };

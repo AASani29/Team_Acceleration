@@ -1,13 +1,39 @@
 import express from 'express';
+import multer from 'multer';
 import {
   test,
   updateUser,
   deleteUser,
   searchUserByUsername,
+  uploadUserImage,
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../utils/verifyUser.js'; // Middleware for verifying token
 
 const router = express.Router();
+
+// Multer configuration for image upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  }
+});
 
 // Test Route
 router.get('/', test);
@@ -53,5 +79,8 @@ router.delete('/delete/:id', verifyToken, async (req, res, next) => {
     next(err); // Pass error to middleware
   }
 });
+
+// Image Upload Route
+router.post('/upload-image', verifyToken, upload.single('image'), uploadUserImage);
 
 export default router;
