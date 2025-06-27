@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Share2, Users, MessageCircle, Download, Mic, Volume2, Settings, Copy, Eye, Save, Bot, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Share2, Users, Download, Mic, Volume2, Settings, Copy, Save, Bot, Sparkles } from "lucide-react";
 import { Groq } from "groq-sdk";
 import jsPDF from "jspdf";
-import { saveAs } from "file-saver";
+import html2canvas from "html2canvas";
 
 const CollaborativeStoryEditor = () => {
   const [banglishText, setBanglishText] = useState('');
@@ -107,22 +107,24 @@ const CollaborativeStoryEditor = () => {
     try {
       const chatCompletion = await groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
-        temperature: 0.9,
-        max_tokens: 150,
+        temperature: 0.7,
+        max_tokens: 100,
         messages: [
           {
             role: "system",
-            content: `You are a content assistant. Your task is to generate a short title and caption for a PDF document. The title should be engaging, and the caption should summarize the content succinctly. Respond only with the title and caption.`,
+            content: `You are a Bengali content assistant. Generate ONLY a Bengali title and caption for the given Bengali text. Respond with ONLY the Bengali title on the first line and Bengali caption on the second line. Keep it simple and relevant to the content. Do not add any English text or explanations.`,
           },
           {
             role: "user",
-            content: `Please generate a title and caption for the following content: ${text}`,
+            content: `এই বাংলা লেখার জন্য একটি বাংলা শিরোনাম এবং ক্যাপশন তৈরি করুন: ${text}`,
           },
         ],
       });
 
-      const aiResponse = chatCompletion.choices[0]?.message?.content || "No response from AI.";
-      const [title, caption] = aiResponse.split("\n");
+      const aiResponse = chatCompletion.choices[0]?.message?.content || "বাংলা লেখা\nএকটি সুন্দর বাংলা রচনা।";
+      const lines = aiResponse.split("\n").filter(line => line.trim());
+      const title = lines[0] || "বাংলা লেখা";
+      const caption = lines[1] || "একটি সুন্দর বাংলা রচনা।";
 
       setPdfTitle(title);
       setPdfCaption(caption);
@@ -130,24 +132,94 @@ const CollaborativeStoryEditor = () => {
       setPostCaption(caption);
     } catch (error) {
       console.error("Error generating caption:", error);
+      // Fallback to default Bengali title and caption
+      setPdfTitle("বাংলা লেখা");
+      setPdfCaption("একটি সুন্দর বাংলা রচনা।");
+      setPostTitle("বাংলা লেখা");
+      setPostCaption("একটি সুন্দর বাংলা রচনা।");
     }
   };
 
-  const handleDownloadPDF = () => {
-    const pdf = new jsPDF();
-    pdf.text(banglaText, 10, 10);
+  const handleDownloadPDF = async () => {
+    try {
+      // Create a temporary div element with proper styling for Bangla text
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm;
+        background: white;
+        font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: black;
+        box-sizing: border-box;
+      `;
 
-    if (pdfTitle) {
-      pdf.setFontSize(20);
-      pdf.text(pdfTitle, 10, 30);
+      // Create content with proper Bangla text rendering
+      const content = `
+        <div style="margin-bottom: 30px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+            ${pdfTitle || storyTitle || 'বাংলা লেখা'}
+          </h1>
+          ${pdfCaption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${pdfCaption}</p>` : ''}
+        </div>
+        <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+          ${banglaText}
+        </div>
+      `;
+
+      tempDiv.innerHTML = content;
+      document.body.appendChild(tempDiv);
+
+      // Generate canvas from the div
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: tempDiv.offsetWidth,
+        height: tempDiv.offsetHeight
+      });
+
+      // Remove the temporary div
+      document.body.removeChild(tempDiv);
+
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`${storyTitle || 'bangla_story'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
     }
-
-    if (pdfCaption) {
-      pdf.setFontSize(12);
-      pdf.text(pdfCaption, 10, 40);
-    }
-
-    pdf.save(`${storyTitle || 'translated_text'}.pdf`);
   };
 
   const handleVoiceInput = () => {
@@ -268,12 +340,75 @@ const CollaborativeStoryEditor = () => {
       const sourceText = activeLanguage === 'banglish' ? banglishText : englishText;
       await appendToCSV(banglaText, sourceText);
 
-      // PDF creation/upload logic
-      const pdf = new jsPDF();
-      pdf.text(postTitle, 10, 30);
-      pdf.text(postCaption, 10, 50);
-      pdf.text(banglaText, 10, 70);
-      const pdfBlob = pdf.output("blob");
+      // PDF creation/upload logic with proper Bangla text support
+      const createPDFBlob = async () => {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+          position: fixed;
+          top: -9999px;
+          left: -9999px;
+          width: 210mm;
+          min-height: 297mm;
+          padding: 20mm;
+          background: white;
+          font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;
+          font-size: 16px;
+          line-height: 1.6;
+          color: black;
+          box-sizing: border-box;
+        `;
+
+        const content = `
+          <div style="margin-bottom: 30px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+              ${postTitle || 'বাংলা লেখা'}
+            </h1>
+            ${postCaption ? `<p style="font-style: italic; text-align: center; margin-bottom: 20px; color: #666; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">${postCaption}</p>` : ''}
+          </div>
+          <div style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Arial Unicode MS', 'Tahoma', 'SolaimanLipi', sans-serif;">
+            ${banglaText}
+          </div>
+        `;
+
+        tempDiv.innerHTML = content;
+        document.body.appendChild(tempDiv);
+
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+
+        document.body.removeChild(tempDiv);
+
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        return pdf.output("blob");
+      };
+
+      const pdfBlob = await createPDFBlob();
 
       const formData = new FormData();
       formData.append("pdf", pdfBlob);
