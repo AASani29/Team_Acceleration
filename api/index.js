@@ -35,7 +35,8 @@ mongoose
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'client', 'dist')));
+// Serve static files (React frontend)
+app.use(express.static(path.join(__dirname, "/client/dist")));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API routes
