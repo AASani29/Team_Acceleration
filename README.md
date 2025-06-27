@@ -8,7 +8,7 @@
 
 ### **Authentication**
 Secure user login and registration, along with protected API endpoints for a safe and personalized experience.
-![Authentication](path/to/image)
+![Authentication](Images/Login.png)
 
 ### **Banglish to Bangla Conversion**
 A high-accuracy translation system that converts Banglish text into Bangla seamlessly.
