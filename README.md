@@ -12,7 +12,7 @@ Secure user login and registration, along with protected API endpoints for a saf
 
 ### **Banglish to Bangla Collaboartive Story Editor**
 A high-accuracy translation system that converts Banglish story into Bangla story seamlessly.
-![Banglish to Bangla Conversion story Editor](Images/Banglish to Bangla Conersion Story Editor)
+![Banglish to Bangla Conversion story Editor](Images/Collaborative_Story_Editor.png)
 
 ### **Content Management**
 - **Banglish Text Editor**: Create content in Banglish and convert it into Bangla.
