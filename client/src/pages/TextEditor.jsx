@@ -35,37 +35,60 @@ const CollaborativeStoryEditor = () => {
 
   // Initialize WebSocket connection
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:3000");
-
-    ws.current.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === "update") {
-          if (message.language === 'banglish') {
-            setBanglishText(message.data);
-          } else if (message.language === 'english') {
-            setEnglishText(message.data);
+    // LocalStorage-based collaboration (works across tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === 'collab-story-data') {
+        try {
+          const data = JSON.parse(e.newValue);
+          if (data.language === 'banglish') {
+            setBanglishText(data.text);
+          } else if (data.language === 'english') {
+            setEnglishText(data.text);
           }
+        } catch (error) {
+          console.error("Error parsing collaboration data:", error);
         }
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
       }
     };
-
-    ws.current.onopen = () => {
-      console.log("WebSocket connected");
-      setConnectedUsers(Math.floor(Math.random() * 5) + 1);
-    };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
-
+  
+    window.addEventListener('storage', handleStorageChange);
+  
+    // Simulate connected users
+    const interval = setInterval(() => {
+      setConnectedUsers(prev => {
+        const change = Math.random() > 0.5 ? 1 : -1;
+        return Math.max(1, prev + change);
+      });
+    }, 5000);
+  
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    // Check URL for story parameter
+    const params = new URLSearchParams(window.location.search);
+    const storyId = params.get('story');
+    
+    if (storyId) {
+      // Try to load the story
+      const storyData = localStorage.getItem(`story-${storyId}`);
+      if (storyData) {
+        try {
+          const parsed = JSON.parse(storyData);
+          setStoryTitle(parsed.title || 'Untitled Story');
+          setBanglishText(parsed.banglishText || '');
+          setEnglishText(parsed.englishText || '');
+          setBanglaText(parsed.banglaText || '');
+          setIsSharing(true);
+          setShareableLink(window.location.href);
+        } catch (error) {
+          console.error("Error loading shared story:", error);
+        }
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -307,8 +330,27 @@ const CollaborativeStoryEditor = () => {
   const toggleSharing = () => {
     setIsSharing(!isSharing);
     if (!isSharing) {
-      const link = `${window.location.origin}/story/${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a unique ID for this story session
+      const storyId = Math.random().toString(36).substr(2, 9);
+      
+      // Save the current story state to localStorage
+      const storyData = {
+        id: storyId,
+        title: storyTitle,
+        banglishText,
+        englishText,
+        banglaText,
+        createdAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`story-${storyId}`, JSON.stringify(storyData));
+      
+      // Generate the shareable link
+      const link = `${window.location.origin}${window.location.pathname}?story=${storyId}`;
       setShareableLink(link);
+      
+      // Also save the ID so we can load it when the page refreshes
+      localStorage.setItem('current-story-id', storyId);
     } else {
       setShareableLink('');
     }
@@ -528,14 +570,14 @@ const CollaborativeStoryEditor = () => {
       setEnglishText(value);
     }
     
-    // Broadcast the change to all connected clients
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({
-        type: 'update',
-        language,
-        data: value
-      }));
-    }
+    // Broadcast the change via localStorage
+    localStorage.setItem('collab-story-data', JSON.stringify({
+      language,
+      text: value
+    }));
+    
+    // Trigger the storage event manually for same-tab updates
+    window.dispatchEvent(new Event('storage'));
   };
 
   return (
