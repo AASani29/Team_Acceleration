@@ -8,7 +8,7 @@ import path from 'path';
 import pdfRoutes from './routes/pdf.route.js';
 import updateCsvRoutes from "./routes/csv.js";
 import { WebSocketServer } from 'ws'; // Import WebSocket server
-
+import ragRoutes from './routes/rag.route.js';
 // Load environment variables
 dotenv.config();
 
@@ -36,6 +36,7 @@ mongoose
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API routes
 app.use('/api/users', userRoutes);
@@ -43,6 +44,8 @@ app.use('/api/auth', authRoutes);
 app.use("/api/pdf", pdfRoutes);
 app.use("/api", updateCsvRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/rag", ragRoutes);
+app.use('/api/user', userRoutes);
 
 // Catch-all route for serving the client
 app.get('*', (req, res) => {

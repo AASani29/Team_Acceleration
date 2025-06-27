@@ -58,6 +58,27 @@ export const uploadPDF = async (req, res) => {
     await newPDF.save();
     console.log("PDF saved successfully");
 
+    // Generate embeddings for the new PDF
+    try {
+      const embeddingResponse = await fetch(`${process.env.BACKEND_URL}/api/rag/generate-embeddings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization // Forward the auth header
+        },
+        body: JSON.stringify({ pdfId: newPDF._id })
+      });
+      
+      if (!embeddingResponse.ok) {
+        console.error('Embedding generation failed:', await embeddingResponse.text());
+      } else {
+        console.log('Embeddings generated successfully');
+      }
+    } catch (embeddingError) {
+      console.error('Error in embedding generation:', embeddingError);
+    }
+    // ===== END OF ADDED CODE =====
+
     res.status(201).json({ message: "PDF uploaded successfully.", pdf: newPDF });
   } catch (error) {
     console.error("Error uploading PDF:", error.message);

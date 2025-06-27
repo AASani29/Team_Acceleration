@@ -1,10 +1,9 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Home from "./pages/Home";
+
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import TextEditor from "./pages/TextEditor";
-import Chatbot from "./pages/Chatbot";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
@@ -37,7 +36,7 @@ function AppContent() {
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/editor" element={<TextEditor />} />
-          <Route path="/chatbot" element={<Chatbot />} />
+        
           <Route path="/admin/dashboard" element={<Dashboard />} />
           <Route path="/search" element={<Search />} />
           <Route path="/searchuser" element={<SearchUser />} />
