@@ -1,6 +1,6 @@
 # **Blinglo: Banglish to Bangla Conversion App**
 
-**Binglo** is an innovative application designed to bridge the gap between Banglish (Bengali written in English alphabets) and Bangla. By seamlessly converting Banglish text to Bangla, Binglo allows users to communicate, create content, and explore the Bangla language effortlessly. The app incorporates a user-friendly interface, advanced translation algorithms, and modern features like chatbot integration and real-time collaboration, all while preserving the cultural essence of the language.
+**Blinglo** is an innovative application designed to bridge the gap between Banglish (Bengali written in English alphabets) and Bangla. By seamlessly converting Banglish text to Bangla, Binglo allows users to communicate, create content, and explore the Bangla language effortlessly. The app incorporates a user-friendly interface, advanced translation algorithms, and modern features like chatbot integration and real-time collaboration, all while preserving the cultural essence of the language.
 
 ---
 
@@ -12,7 +12,7 @@ Secure user login and registration, along with protected API endpoints for a saf
 
 ### **Banglish to Bangla Collaboartive Story Editor**
 A high-accuracy translation system that converts Banglish story into Bangla story seamlessly.
-![Banglish to Bangla Conversion](path/to/image)
+![Banglish to Bangla Conversion story Editor](Images/Banglish to Bangla Conersion Story Editor)
 
 ### **Content Management**
 - **Banglish Text Editor**: Create content in Banglish and convert it into Bangla.
