@@ -79,7 +79,8 @@ Start crafting beautiful Bangla stories today!
 
 <img src="Images/Save and Download.png" alt="Profile & Stories" width="600"/>  
 <img src="Images/profile.png" alt="Profile & Stories" width="600"/>
----  
+
+--- 
 
 ### **7. Search Functionality**  
 - **Find users** and their public stories.  
