@@ -153,7 +153,6 @@ Start crafting beautiful Bangla stories today!
 - 🔐 **Private**: Each user only accesses their own stories
 - ⚡ **Fast**: Groq's LPU enables <1s responses
 - 🧠 **Accurate**: Vector search finds relevant story segments
-- 
 ---
 ## 👥 Contributors
 
