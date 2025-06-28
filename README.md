@@ -108,12 +108,22 @@ Start crafting beautiful Bangla stories today!
 ### **Backend**  
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/-Express-000000?style=for-the-badge&logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)  
+![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Firebase](https://img.shields.io/badge/-Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Cloudinary](https://img.shields.io/badge/-Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
+![OAuth](https://img.shields.io/badge/-OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white)
+
+### Voice & Audio
+![Web Speech API](https://img.shields.io/badge/-Web%20Speech%20API-5C8DBC?style=for-the-badge&logo=google-chrome&logoColor=white)
+![SpeechSynthesis](https://img.shields.io/badge/-SpeechSynthesis-2596BE?style=for-the-badge&logo=audio-description&logoColor=white)
+![SpeechRecognition](https://img.shields.io/badge/-SpeechRecognition-DC3545?style=for-the-badge&logo=microphone&logoColor=white)
+
 
 ### **AI & NLP**  
 ![Python](https://img.shields.io/badge/-Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![RAG (Retrieval-Augmented Generation)](https://img.shields.io/badge/-RAG-FF6F00?style=for-the-badge&logo=openai&logoColor=white)
-![Text-to-Speech](https://img.shields.io/badge/-TTS-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)  
+![Text-to-Speech](https://img.shields.io/badge/-TTS-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
+![Groq](https://img.shields.io/badge/-Groq-00FF00?style=for-the-badge&logo=groq&logoColor=white)
 
 ---
 
